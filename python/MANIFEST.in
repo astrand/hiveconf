@@ -1,0 +1,5 @@
+include hiveconf.py
+include hivetool
+include MANIFEST.in
+include create_pth.sh
+global-exclude *~ *.pyo *.pyc .cvsignore
