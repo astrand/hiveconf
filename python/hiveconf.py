@@ -154,8 +154,15 @@ class Folder(NamespaceObject):
     def walk(self, indent=None):
         if not indent:
             indent = IndentPrinter()
-        
-        print >>indent, "Parameters:", self.parameters.keys()
+
+        # Print Parameters and values
+        print >>indent, "Parameters:"
+        for (paramname, param) in self.parameters.items():
+            indent.change(4)
+            print >> indent, paramname, "=", param.get_string()
+            indent.change(-4)
+
+        # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
             print >>indent, "Folder:", foldername
             indent.change(4)
