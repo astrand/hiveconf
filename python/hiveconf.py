@@ -192,7 +192,7 @@ class Parameter(NamespaceObject):
     def get_binary(self):
         """Get binary value"""
         try:
-            self._hexascii2string(self.value)
+            return self._hexascii2string(self.value)
         except ValueError:
             raise BadBinaryFormat()
 
@@ -276,6 +276,9 @@ class Parameter(NamespaceObject):
 
     def _hexascii2string(self, s):
         """Convert hexascii to string"""
+        # Remove all spaces from string
+        # FIXME: Remove other ws as well?
+        s = s.replace(" ", "")
         result = ""
         for x in range(len(s)/2):
             pair = s[x*2:x*2+2]
