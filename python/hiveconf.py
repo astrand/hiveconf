@@ -248,9 +248,26 @@ class Parameter(NamespaceObject):
 
 class Folder(NamespaceObject):
     """A folder. Does not contain the name of the folder itself."""
-    def __init__(self):
+    def __init__(self, source, write_target):
         self.folders = {}
         self.parameters = {}
+        # When adding new objects, we need to write them to some file.
+        # We only need one write target. However, it may not be very easy
+        # to figure out which write target to use. Example: This folder is defined
+        # by a read-only machine-wide file, and also by a writable user-file. There are two
+        # cases:
+        #
+        # 1) Mandatory settings, the machine-wide file is read first
+        # In this case, the first read file is not writable, so we should choose
+        # the second one. 
+        #
+        # 2) Default settings, the user file is read first.
+        # The first file (the user file) is writable. Chose it. 
+        #
+        # So, we need to test if the source files are writable.
+
+        self.source = source
+        self.write_target = write_target
 
     def addobject(self, obj, objname):
         if self.exists(objname):
@@ -264,6 +281,19 @@ class Folder(NamespaceObject):
             self.folders[objname] = obj
         else:
             raise InvalidObjectError
+
+##     def create_new_folder(self):
+##         # We need to figure out to which file this folder
+##         # should be written, and where in this file.
+##         # To do this, we should start from the parent folders location.
+##         # The situation is complicated by the fact that the parent folder
+##         # may origin from several physical files. 
+        
+        
+##         # ppp
+##         f = Folder()
+##         self.addobject(f, "newfolder")
+        
 
     def get(self, objname):
         return self.folders.get(objname) or self.parameters.get(objname)
@@ -289,13 +319,13 @@ class Folder(NamespaceObject):
             # Update existing parameter
             param.set_string(new_value)
 
-    def lookup(self, objpath, autocreate=0):
+    def lookup(self, objpath, autocreate=0, source=None):
         """Lookup an object. objname is like global/settings/background
         Returns None if object is not found."""
         comps = path2comps(objpath)
-        return self._lookup_list(comps, autocreate)
+        return self._lookup_list(comps, autocreate, source)
 
-    def _lookup_list(self, comps, autocreate=0):
+    def _lookup_list(self, comps, autocreate=0, source=None):
         """Lookup an object. comps is like
         ["global", "settings", "background"]
         Returns None if object is not found. 
@@ -309,7 +339,12 @@ class Folder(NamespaceObject):
         if not obj:
             if autocreate:
                 # Create folder
-                obj = Folder()
+                if len(comps) == 1:
+                    print "last component"
+                    obj = Folder(source, source)
+                else:
+                    obj = Folder(None, self.write_target)
+                    
                 self.addobject(obj, first_comp)
             else:
                 return
@@ -322,7 +357,7 @@ class Folder(NamespaceObject):
             if not isinstance(obj, Folder):
                 raise ObjectExistsError
             
-            return obj._lookup_list(rest_comps, autocreate)
+            return obj._lookup_list(rest_comps, autocreate, source)
 
     def walk(self, indent=None):
         if not indent:
@@ -334,7 +369,8 @@ class Folder(NamespaceObject):
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
-            print >>indent, foldername + "/"
+            print >>indent, foldername + "/",
+            print " (source:%s, write_target:%s)" % (folder.source, folder.write_target)
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
@@ -355,7 +391,7 @@ def open_hive(url, rootfolder=None):
     file = urllib2.urlopen(url)
 
     if not rootfolder:
-        rootfolder = Folder()
+        rootfolder = Folder(url, url)
     curfolder = rootfolder
     linenum = 0
     sectionname = ""
@@ -380,7 +416,8 @@ def open_hive(url, rootfolder=None):
 
             sectionname = line[1:-1]
             print >>debugw, "Read section line", sectionname
-            curfolder = rootfolder.lookup(sectionname, autocreate=1)
+            curfolder = rootfolder.lookup(sectionname, autocreate=1, source=url)
+            
         elif line.startswith("%"):
             # Directive
             fields = line.split()
