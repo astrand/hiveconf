@@ -42,7 +42,11 @@ def handle_param(hive, param):
     if not value:
         # Display value
         method = getattr(hive, "get_%s" % paramtype)
-        print method(parampath)
+        value = method(parampath)
+        if value == None:
+            print >>sys.stderr, "%s: No such parameter" % parampath
+        else:
+            print value
     else:
         # Set value
         method = getattr(hive, "set_%s" % paramtype)
