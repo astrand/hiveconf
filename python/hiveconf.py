@@ -528,7 +528,8 @@ class _HiveFileParser:
             url = self.url
         
         url = _fixup_url(url)
-        file = urllib2.urlopen(url)
+        print >>debugw, "Opening URL", url
+        file = urllib2.urlopen(url) 
 
         if not rootfolder:
             rootfolder = Folder(url, url, "/")
@@ -670,7 +671,7 @@ class _HiveFileParser:
             # Glob local files
             urls_to_mount =[]
             # FIXME: Warn if no files found?
-            glob_result = glob.glob(mnturl)
+            glob_result = glob.glob(os.path.expanduser(mnturl))
             glob_result.sort()
             for url_to_mount in glob_result:
                 # Add file: 
