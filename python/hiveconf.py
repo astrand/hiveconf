@@ -105,8 +105,6 @@ class NamespaceObject:
 
 
 class Parameter(NamespaceObject):
-    # Innehåller textsträngsvärdet "value"; men oparsat, dvs ej försökt översätta till
-    # någon speciell datatyp. 
     def __init__(self, value, source, sectionname, paramname):
         self.value = value
         # URL that this parameter was read from
@@ -289,18 +287,19 @@ class Folder(NamespaceObject):
         else:
             raise InvalidObjectError
 
-##     def create_new_folder(self):
-##         # We need to figure out to which file this folder
-##         # should be written, and where in this file.
-##         # To do this, we should start from the parent folders location.
-##         # The situation is complicated by the fact that the parent folder
-##         # may origin from several physical files. 
-        
-        
-##         # ppp
-##         f = Folder()
-##         self.addobject(f, "newfolder")
-        
+##     def create_new_folder(self, folderpath):
+##         comps = path2comps(folderpath)
+##         fold = _create_folders(self, comps, None)
+##         # Write to disk
+##         nice_folderpath = string.join(comps, "/")
+##         sectionstring = "[%s]" % nice_folderpath
+
+##         (scheme, netloc, filename, query, fragment) = urlparse.urlsplit(fold.write_target)
+##         if not scheme == "file":
+##             # Only able to write to local files right now
+##             raise ReadOnlySource()
+
+##         print >> open(filename, "a"), sectionstring
 
     def get(self, objname):
         return self.folders.get(objname) or self.parameters.get(objname)
@@ -453,6 +452,8 @@ def handle_section(rootfolder, sectionname, source):
     return folder
 
 
+# Create folder in memory. Not for external use.
+# The external function should also write folder to disk. 
 def _create_folders(folder, comps, source):
     first_comp = comps[0]
     rest_comps = comps[1:] 
@@ -527,6 +528,7 @@ def mount_directive(args, curfolder, url, linenum):
         
 
 class ParamUpdater:
+    # FIXME: Broken for parameter files. 
     def __init__(self, source, sectionname, paramname):
         self.source = source
         self.sectionname = sectionname
