@@ -7,7 +7,7 @@ hiveconf is a configuration framework
 from distutils.core import setup
 
 setup (name = "hiveconf",
-       version = "0.0",
+       version = "0.1",
        license = "LGPL",
        description = "configuration framework",
        long_description = DESCRIPTION,
