@@ -1,3 +1,7 @@
 
 * Allow variable substitutions in hive files, like $(PID) etc?
 
+* Study http://www.cat.org.au/maffew/cat/unix-config.html, and see if
+  we have missed something. 
+
+* I18N support. 
