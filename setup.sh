@@ -1,5 +1,6 @@
 #!/bin/sh
 
+PATH=$PATH:/usr/local/bin
 for binary in python2 python2.0 python2.1 python2.2 python2.3; do
     if $binary -c "" ; then
         $binary - <<EOF
