@@ -680,7 +680,7 @@ class _HiveFileParser:
             if line.startswith("["):
                 # Folder
                 if not line.endswith("]"):
-                    raise SyntaxError
+                    raise SyntaxError(linenum)
 
                 sectionname = line[1:-1]
                 print >>debugw, "Read section line", sectionname
