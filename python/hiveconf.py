@@ -137,7 +137,7 @@ class NamespaceObject:
 class Parameter(NamespaceObject):
     def __init__(self, value, source, sectionname, paramname):
         # This parameters value, in the external string representation
-        self.value = value
+        self._value = value
         # URL that this parameter was read from
         if not source:
             raise "No source!" # FIXME
@@ -148,50 +148,50 @@ class Parameter(NamespaceObject):
 
     def __repr__(self):
         return "<Parameter: %s  value=%s  section=%s  source=%s>" \
-               % (self.paramname, self.value, self.sectionname, self.source)
+               % (self.paramname, self._value, self.sectionname, self.source)
 
     def _be_add_param(self):
         """Add a new parameter to the backend"""
         hfu = HiveFileUpdater(self.source)
-        hfu.add_parameter(self.sectionname, self.paramname, self.value)
+        hfu.add_parameter(self.sectionname, self.paramname, self._value)
 
     def _be_change_param(self):
         """Change the value of a existing parameter in the backend"""
         hfu = HiveFileUpdater(self.source)
-        hfu.change_parameter(self.sectionname, self.paramname, self.value)
+        hfu.change_parameter(self.sectionname, self.paramname, self._value)
 
     #
     # Primitive data types, get operations
     #
     def get_string(self):
         """Get value as string"""
-        return self.value
+        return self._value
 
     def get_bool(self):
         """Get boolean value"""
         try:
-            return self._string2bool(self.value)
+            return self._string2bool(self._value)
         except ValueError:
             raise BadBoolFormat()
     
     def get_integer(self):
         """Get integer value"""
         try:
-            return int(self.value)
+            return int(self._value)
         except ValueError:
             raise BadIntegerFormat()
 
     def get_float(self):
         """Get float value"""
         try:
-            return float(self.value)
+            return float(self._value)
         except ValueError:
             raise BadFloatFormat()
 
     def get_binary(self):
         """Get binary value"""
         try:
-            return self._hexascii2string(self.value)
+            return self._hexascii2string(self._value)
         except ValueError:
             raise BadBinaryFormat()
 
@@ -199,65 +199,65 @@ class Parameter(NamespaceObject):
     # Compound data types, get operations
     #
     def get_string_list(self):
-        return self.value.split()
+        return self._value.split()
 
     def get_bool_list(self):
-        return map(self._string2bool, self.value.split())
+        return map(self._string2bool, self._value.split())
 
     def get_integer_list(self):
-        return map(int, self.value.split())
+        return map(int, self._value.split())
 
     def get_float_list(self):
-        return map(float, self.value.split())
+        return map(float, self._value.split())
 
     def get_binary_list(self):
-        return map(self._hexascii2string, self.value.split())
+        return map(self._hexascii2string, self._value.split())
     
     #
     # Primitive data types, set operations
     #
     def set_string(self, new_value):
         """Set string value"""
-        self.value = new_value
+        self._value = new_value
 
     def set_bool(self, new_value):
         """Set bool value"""
-        self.value = self._bool2string(new_value)
+        self._value = self._bool2string(new_value)
 
     def set_integer(self, new_value):
         """Set integer value"""
-        self.value = str(new_value)
+        self._value = str(new_value)
 
     def set_float(self, new_value):
         """Set float value"""
-        self.value = str(new_value)
+        self._value = str(new_value)
 
     def set_binary(self, new_value):
         """Set binary value"""
-        self.value = self._string2hexascii(new_value)
+        self._value = self._string2hexascii(new_value)
 
     #
     # Compound data types, set operations
     #
     def set_string_list(self, new_value):
         """Set string list value"""
-        self.value = string.join(new_value)
+        self._value = string.join(new_value)
     
     def set_bool_list(self, new_value):
         """Set bool list value"""
-        self.value = string.join(map(self._bool2string, new_value))
+        self._value = string.join(map(self._bool2string, new_value))
 
     def set_integer_list(self, new_value):
         """Set integer list value"""
-        self.value = string.join(map(str, new_value))
+        self._value = string.join(map(str, new_value))
 
     def set_float_list(self, new_value):
         """Set float list value"""
-        self.value = string.join(map(str, new_value))
+        self._value = string.join(map(str, new_value))
 
     def set_binary_list(self, new_value):
         """Set binary list value"""
-        self.value = string.join(map(self._string2hexascii, new_value))
+        self._value = string.join(map(self._string2hexascii, new_value))
 
     #
     # Internal methods
