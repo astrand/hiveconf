@@ -18,8 +18,8 @@ def get_type(s):
     
     (beforecolon, aftercolon) = words
     if beforecolon in ("string", "bool", "integer", "float", "binary",
-                       "stringlist", "boollist", "integerlist",
-                       "floatlist", "binarylist"):
+                       "string_list", "bool_list", "integer_list",
+                       "float_list", "binary_list"):
         return (beforecolon, aftercolon)
     else:
         return (DEFAULTTYPE, s)
@@ -39,12 +39,14 @@ def handle_param(hive, param):
     (paramtype, param) = get_type(param)
     (parampath, value) = get_value(param)
 
+    method = getattr(hive, "get_%s" % paramtype)
+        
     if not value:
         # Display value
-        print hive.get_string(parampath)
+        print method(parampath)
     else:
         # Set value
-        hive.set_string(parampath, value)
+        method(parampath, value)
 
 
 def usage():
@@ -55,7 +57,7 @@ hivetool [options] parameter[=value] ...
   -R,--recursive	When using -a, ascend folders recursively
   -t,--type <type>	Set type for the next listed parameters. Type is one of:
 			string, bool, integer, float, binary,
-			stringlist, boollist, integerlist, floatlist, binarylist
+			string_list, bool_list, integer_list, float_list, binary_list
 			Default is string
   -r,--root <file>	Specify root hive file. Default is /etc/root.hive
   -v,--version		Print version
