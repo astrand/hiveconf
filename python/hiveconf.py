@@ -68,6 +68,7 @@ class BadFloatFormat(Error): pass
 class BadBinaryFormat(Error): pass
 class BadListFormat(Error): pass
 class ReadOnlySource(Error): pass
+class FolderNotEmpty(Error): pass
     
 class SyntaxError(Error):
     def __init__(self, linenum):
@@ -175,7 +176,7 @@ class Parameter(NamespaceObject):
         hfu.add_parameter(self.sectionname, self.paramname, self._value)
         return 1
 
-    def _be_change_param(self):
+    def _be_change_param(self, delete=0):
         """Change the value of a existing parameter in the backend"""
         if not self.write_target:
             print >>debugw, "_be_change_param(%s): no write_target" % self.paramname
@@ -187,7 +188,8 @@ class Parameter(NamespaceObject):
             return self._be_add_param()
         else:
             hfu = _HiveFileUpdater(self.write_target)
-            hfu.change_parameter(self.sectionname, self.paramname, self._value)
+            hfu.change_parameter(self.sectionname, self.paramname,
+                                 self._value, delete_param=delete)
 
         return 1
 
@@ -361,6 +363,10 @@ class Folder(NamespaceObject):
         hfu = _HiveFileUpdater(self.write_target)
         hfu.add_section(self.sectionname)
 
+    def _be_delete_folder(self):
+        hfu = _HiveFileUpdater(self.write_target)
+        hfu.delete_section(self.sectionname)
+
     def _addobject(self, obj, objname):
         if self._exists(objname):
             raise ObjectExistsError
@@ -406,6 +412,54 @@ class Folder(NamespaceObject):
         else:
             return folder._parameters.keys()
 
+    def delete(self, path, recursive=0):
+        obj = self.lookup(path)
+
+        if not obj:
+            return 1
+
+        comps = _path2comps(path)
+
+        if [] != comps[:-1]:
+            parentfolder = self._lookup_list(comps[:-1])
+        else:
+            parentfolder = self
+
+        if isinstance(obj, Parameter):
+            return parentfolder._delete_param(comps[-1])
+        else:
+            subfolders = obj._folders.keys()
+            subparams = obj._parameters.keys()
+
+            if ([] != subfolders or [] != subparams) and not recursive:
+                raise FolderNotEmpty
+
+            return parentfolder._delete_folder(comps[-1])
+
+    def _delete_folder(self, foldername):
+        print >> debugw, self, "_delete_folder(\"%s\")" % foldername
+        folder = self._folders[foldername]
+        for (subfoldername, subfolder) in folder._folders.items():
+            if "/" == subfoldername:
+                continue
+            folder._delete_folder(subfoldername)
+        for (subparamname, subparam) in folder._parameters.items():
+            folder._delete_param(subparamname)
+
+        self._folders[foldername]._be_delete_folder()
+        del self._folders[foldername]
+
+    def _delete_param(self, paramname):
+        print >> debugw, self, "_delete_param(\"%s\")" % paramname
+        self._parameters[paramname]._be_change_param(delete=1)
+        del self._parameters[paramname]
+        
+        
+
+        
+        
+        
+
     def _get_value(self, parampath, default, method):
         param = self.lookup(parampath)
 
@@ -416,6 +470,29 @@ class Folder(NamespaceObject):
             if not isinstance(param, Parameter):
                 raise NotAParameterError()
             return method(param)
+
+#     def delete_folder(self, folderpath, recursive=0):
+#         print >> debugw, "Deleting folder with folderpath", folderpath
+#         subfolders = self.get_folders(folderpath)
+#         subparameters = self.get_parameters(folderpath)
+#         print >> debugw, "subfolders:", subfolders
+#         print >> debugw, "subparameters:", subparameters
+#         if not recursive and ([] != subfolders or [] != subparameters):
+#             raise FolderNotEmpty
+
+#         if recursive:
+#             for subfolderpath in subfolders:
+#                 self.delete_folder(os.path.join(folderpath, subfolderpath),
+#                                    recursive=1)
+#             for subparameterpath in subparameters:
+#                 self.delete_parameter(os.path.join(folderpath,
+#                                                    subparameterpath))
+
+#         del self._folders[
+#         self._be_delete_folder(folderpath)
+
+#     def delete_parameter(self, parameterpath):
+#         pass
 
     def get_string(self, parampath, default=None):
         return self._get_value(parampath, default, Parameter.get_string)
@@ -803,7 +880,8 @@ class _HiveFileUpdater:
             # Only able to write to local files right now
             raise ReadOnlySource()
 
-    def change_parameter(self, sectionname, paramname, value, new_param=0):
+    def change_parameter(self, sectionname, paramname, value, new_param=0,
+                         delete_param=0):
         """Change existing parameter line in file"""
         # FIXME: Use file locking
         f = open(self.filename, "r+")
@@ -824,7 +902,8 @@ class _HiveFileUpdater:
 
         # Seek to parameter offset, and write new value
         f.seek(parameter_offset)
-        print >> f, paramname + "=" + value
+        if not delete_param:
+            print >> f, paramname + "=" + value
 
         # Write rest
         f.write(rest_data)
@@ -833,7 +912,17 @@ class _HiveFileUpdater:
     def add_parameter(self, sectionname, paramname, value):
         self.change_parameter(sectionname, paramname, value, new_param=1)
 
-    def _find_offset(self, f, sectionname, paramname, new_param=0):
+    def delete_section(self, sectionname):
+        f = open(self.filename, "r+")
+        section_offset = self._find_offset(f, sectionname, None, get_section=1)
+        f.readline()
+        rest_data = f.read()
+        f.seek(section_offset)
+        f.write(rest_data)
+        f.truncate()
+
+    def _find_offset(self, f, sectionname, paramname, new_param=0,
+                     get_section=0):
         correct_section = 0 
 
         # If this parameter is at top level, we are already in the
@@ -845,9 +934,12 @@ class _HiveFileUpdater:
         if correct_section and new_param:
             return f.tell()
 
+        print >> debugw, "_find_offset, sectionname:", sectionname
+
         while 1:
             line_offset = f.tell()
             line = f.readline()
+            print >> debugw, "Read line:", line.strip()
 
             if not line:
                 break
@@ -864,7 +956,9 @@ class _HiveFileUpdater:
                     continue
 
                 correct_section = (sectionname == line[1:-1])
-                if correct_section and new_param:
+                if correct_section and get_section:
+                    return line_offset
+                elif correct_section and new_param:
                     # If we have found the correct section,
                     # we should add new parameters just below it.
                     return f.tell()
