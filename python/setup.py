@@ -15,5 +15,8 @@ setup (name = "hiveconf",
        author_email = "peter@cendio.se",
        url = "http://www.cendio.se/~peter/hiveconf",
        py_modules = ["hiveconf"],
-       data_files=[('/usr/bin', ['hivetool'])]
+       data_files=[('/usr/bin', ['hivetool']),
+                   ('/etc', ['etc/root.hive']),
+                   ('/etc/hiveconf.d', [])
+                   ]
        )
