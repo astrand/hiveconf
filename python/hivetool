@@ -56,7 +56,8 @@ def handle_param(hive, param):
     else:
         # Set value
         method = getattr(hive, "set_%s" % paramtype)
-        method(parampath, value)
+        if not method(parampath, value):
+            print >>sys.stderr, "Failed to set parameter", parampath
 
 
 def usage():
