@@ -663,9 +663,8 @@ class HiveFileParser:
             for url_to_mount in glob.glob(mnturl):
                 # Add file: 
                 urls_to_mount.append(fixup_url(mnturl))
-
         else:
-            urls_to_mount = glob.glob(mnturl)
+            urls_to_mount = [mnturl]
             
         for mount_url in urls_to_mount:
             if format == "hive":
