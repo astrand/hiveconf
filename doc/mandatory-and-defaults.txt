@@ -1,2 +1,28 @@
 
-FIXME
+Using mandatory and default settings with Hiveconf
+==================================================
+
+All applications using Hiveconf can use mandatory parameters
+(parameters that only the system administrator can change) and default
+parameters. This is configured by modifying the entry hive. 
+
+Assume for a moment that Samba uses Hiveconf. If so, the entry hive
+(/etc/samba/smb.hconf) could look like:
+
+    # Mandatory settings
+    %mount /etc/samba/smb.conf.mandatory
+    
+    # User settings
+    %mount ~/.smb.conf
+    
+    # System defaults
+    %mount /etc/samba/smb.conf
+    
+(You might ask what's the point of having user settings with a system
+service like Samba. But Samba actually consists both of system
+services and user tools, like smbclient. With the current
+implementation, it's impossible for the user to configure the WINS
+server, for example. This problem could be solved with Hiveconf.)
+
+Look at python/examples/clarence/clarence/clarence.hconf for yet
+another example.
