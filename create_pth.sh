@@ -1,10 +1,12 @@
 
-python - <<EOF
+for binary in python2 python2.0 python2.1 python2.2 python2.3; do
+    if $binary -c "" &>/dev/null; then
+        $binary - <<EOF
 import sys
 sitedir = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages"
 filename = sitedir + "/hiveconf.pth"
-f = open(filename, "w")
-f.write("/usr/lib/hiveconf\n")
-f.close()
+open(filename, "w").write("/usr/lib/hiveconf\n")
 print "Created", filename
 EOF
+    fi
+done
