@@ -366,8 +366,7 @@ class Folder(NamespaceObject):
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
-            print >>indent, foldername + "/",
-            print " (sources:%s, write_target:%s)" % (folder.sources, folder.write_target)
+            print >>indent, foldername + "/ (sources:%s, write_target:%s)" % (folder.sources, folder.write_target)
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
@@ -457,7 +456,7 @@ def handle_section(rootfolder, sectionname, source):
 def _create_folders(folder, comps, source):
     first_comp = comps[0]
     rest_comps = comps[1:] 
-        
+
     obj = folder.get(first_comp)
     if not obj:
         # Create folder
