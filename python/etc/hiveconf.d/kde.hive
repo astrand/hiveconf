@@ -1,0 +1,123 @@
+
+[kde]
+%mount /etc/kderc
+
+[kde/charsets]
+%mount /usr/share/config/charsets
+
+[kde/kdebug]
+%mount /usr/share/config/kdebugrc
+
+[kde/kdm]
+%mount /etc/X11/xdm/kdmrc
+
+[kde/ant]
+%mount /usr/share/config/antrc
+
+[kde/attraction]
+%mount /usr/share/config/attractionrc
+
+[kde/bouboule]
+%mount /usr/share/config/bouboulerc
+
+[kde/bubbles]
+%mount /usr/share/config/bubblesrc
+
+[kde/clockapplet]
+%mount /usr/share/config/clockappletrc
+
+[kde/coral]
+%mount /usr/share/config/coralrc
+
+[kde/crystal]
+%mount /usr/share/config/crystalrc
+
+[kde/decayscreen]
+%mount /usr/share/config/decayscreenrc
+
+[kde/deluxe]
+%mount /usr/share/config/deluxerc
+
+[kde/demon]
+%mount /usr/share/config/demonrc
+
+[kde/drift]
+%mount /usr/share/config/driftrc
+
+[kde/epicycle]
+%mount /usr/share/config/epicyclerc
+
+[kde/fadeplot]
+%mount /usr/share/config/fadeplotrc
+
+[kde/flame]
+%mount /usr/share/config/flamerc
+
+[kde/flow]
+%mount /usr/share/config/flowrc
+
+[kde/forest]
+%mount /usr/share/config/forestrc
+
+[kde/gears]
+%mount /usr/share/config/gearsrc
+
+[kde/goop]
+%mount /usr/share/config/gooprc
+
+[kde/grav]
+%mount /usr/share/config/gravrc
+
+[kde/halo]
+%mount /usr/share/config/halorc
+
+[kde/imsmap]
+%mount /usr/share/config/imsmaprc
+
+[kde/interference]
+%mount /usr/share/config/interferencerc
+
+[kde/desktop]
+%mount /usr/share/config/kdesktoprc
+
+[kde/klipper]
+%mount /usr/share/config/klipperrc
+
+[kde/minipagerapplet]
+%mount /usr/share/config/kminipagerappletrc
+
+[kde/konqueror]
+%mount /usr/share/config/konquerorrc
+
+[kde/konsole]
+%mount /usr/share/config/konsolerc
+
+[kde/kshorturifilter]
+%mount /usr/share/config/kshorturifilterrc
+
+[kde/kstyle]
+%mount /usr/share/config/kstylerc
+
+[kde/kumppa]
+%mount /usr/share/config/kumpparc
+
+[kde/kuriikwsfilter]
+%mount /usr/share/config/kuriikwsfilterrc
+
+[kde/kwin]
+%mount /usr/share/config/kwinrc
+
+[kde/laser]
+%mount /usr/share/config/laserrc
+
+[kde/lissie]
+%mount /usr/share/config/lissierc
+
+[kde/penrose]
+%mount /usr/share/config/penroserc
+
+[kde/rocks]
+%mount /usr/share/config/rocksrc
+
+[kde/slip]
+%mount /usr/share/config/sliprc
