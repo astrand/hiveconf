@@ -365,7 +365,7 @@ class Folder(NamespaceObject):
 
     def _be_delete_folder(self):
         hfu = _HiveFileUpdater(self.write_target)
-        hfu.delete_section(self.sectionname)
+        return hfu.delete_section(self.sectionname)
 
     def _addobject(self, obj, objname):
         if self._exists(objname):
@@ -416,7 +416,7 @@ class Folder(NamespaceObject):
         obj = self.lookup(path)
 
         if not obj:
-            return 1
+            return 0
 
         comps = _path2comps(path)
 
@@ -448,17 +448,13 @@ class Folder(NamespaceObject):
 
         self._folders[foldername]._be_delete_folder()
         del self._folders[foldername]
+        return 1
 
     def _delete_param(self, paramname):
         print >> debugw, self, "_delete_param(\"%s\")" % paramname
         self._parameters[paramname]._be_change_param(delete=1)
         del self._parameters[paramname]
-        
-        
-
-        
-        
-        
+        return 1
 
     def _get_value(self, parampath, default, method):
         param = self.lookup(parampath)
@@ -470,29 +466,6 @@ class Folder(NamespaceObject):
             if not isinstance(param, Parameter):
                 raise NotAParameterError()
             return method(param)
-
-#     def delete_folder(self, folderpath, recursive=0):
-#         print >> debugw, "Deleting folder with folderpath", folderpath
-#         subfolders = self.get_folders(folderpath)
-#         subparameters = self.get_parameters(folderpath)
-#         print >> debugw, "subfolders:", subfolders
-#         print >> debugw, "subparameters:", subparameters
-#         if not recursive and ([] != subfolders or [] != subparameters):
-#             raise FolderNotEmpty
-
-#         if recursive:
-#             for subfolderpath in subfolders:
-#                 self.delete_folder(os.path.join(folderpath, subfolderpath),
-#                                    recursive=1)
-#             for subparameterpath in subparameters:
-#                 self.delete_parameter(os.path.join(folderpath,
-#                                                    subparameterpath))
-
-#         del self._folders[
-#         self._be_delete_folder(folderpath)
-
-#     def delete_parameter(self, parameterpath):
-#         pass
 
     def get_string(self, parampath, default=None):
         return self._get_value(parampath, default, Parameter.get_string)
