@@ -1,0 +1,28 @@
+
+
+The file consists of sections and parameters. A section begins with
+the name of the section in square brackets and continues until the
+next section begins. Sections defines "Folders" in the HiveConfig
+namespace. Sections contain parameters of the form
+
+name = value
+
+The file is line-based - that is, each newline-terminated line
+represents either a comment, a section name or a parameter.
+
+Section and parameter names are not case sensitive.
+
+Only the first equals sign in a parameter is significant.  Whitespace
+before or after the first equals sign is discarded. Leading, trailing
+and internal whitespace in section and parameter names is
+irrelevant. Leading and trailing whitespace in a parameter value is
+discarded. Internal whitespace within a parameter value is retained
+verbatim.
+
+Any line beginning with a semicolon (';') or a hash ('#') character is
+ignored, as are lines containing only whitespace.
+
+Any line ending in a '\' is continued on the next line in the
+customary UNIX fashion.
+
+**FIXME: "Here-documents" are allowed. Describe them as well. 
