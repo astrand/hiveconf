@@ -290,21 +290,6 @@ class Folder(NamespaceObject):
     def __init__(self, source, write_target, sectionname):
         self.folders = {}
         self.parameters = {}
-        # When adding new objects, we need to write them to some file.
-        # We only need one write target. However, it may not be very easy
-        # to figure out which write target to use. Example: This folder is defined
-        # by a read-only machine-wide file, and also by a writable user-file. There are two
-        # cases:
-        #
-        # 1) Mandatory settings, the machine-wide file is read first
-        # In this case, the first read file is not writable, so we should choose
-        # the second one. 
-        #
-        # 2) Default settings, the user file is read first.
-        # The first file (the user file) is writable. Chose it. 
-        #
-        # So, we need to test if the source files are writable.
-
         # List of URLs that has contributed to this Folder.
         self.sources = []
         # URL to write to when adding new folder objects. 
@@ -337,20 +322,6 @@ class Folder(NamespaceObject):
         else:
             raise InvalidObjectError
 
-##     def create_new_folder(self, folderpath):
-##         comps = path2comps(folderpath)
-##         fold = _create_folders(self, comps, None)
-##         # Write to disk
-##         nice_folderpath = string.join(comps, "/")
-##         sectionstring = "[%s]" % nice_folderpath
-
-##         (scheme, netloc, filename, query, fragment) = urlparse.urlsplit(fold.write_target)
-##         if not scheme == "file":
-##             # Only able to write to local files right now
-##             raise ReadOnlySource()
-
-##         print >> open(filename, "a"), sectionstring
-
     def _get_object(self, objname):
         return self.folders.get(objname) or self.parameters.get(objname)
         
@@ -360,7 +331,6 @@ class Folder(NamespaceObject):
     #
     # Get methods
     #
-
     def _get_value(self, parampath, method):
         param = self.lookup(parampath)
         if not param:
@@ -401,7 +371,6 @@ class Folder(NamespaceObject):
     #
     # Set methods
     #
-
     def _set_value(self, parampath, value, method):
         comps = path2comps(parampath)
         folder = self._lookup_list(comps[:-1], autocreate=1) 
