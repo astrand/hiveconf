@@ -107,6 +107,13 @@ def fixup_url(url):
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
+def fixup_sectionname(sn):
+    """Add leading slash, remove trailing slash, if necessary"""
+    if not sn.startswith("/"):
+        sn = "/" + sn
+    if sn.endswith("/"):
+        sn = sn[:-1]
+    return sn
 
 #
 # End of utility functions
@@ -118,6 +125,7 @@ class NamespaceObject:
 
 class Parameter(NamespaceObject):
     def __init__(self, value, source, sectionname, paramname):
+        # This parameters value, in the external string representation
         self.value = value
         # URL that this parameter was read from
         if not source:
@@ -182,27 +190,22 @@ class Parameter(NamespaceObject):
     def set_string(self, new_value):
         """Set string value"""
         self.value = new_value
-        self._be_change_param()
 
     def set_bool(self, new_value):
         """Set bool value"""
         self.value = self._bool2string(new_value)
-        self._be_change_param()
 
     def set_integer(self, new_value):
         """Set integer value"""
         self.value = str(new_value)
-        self._be_change_param()
 
     def set_float(self, new_value):
         """Set float value"""
         self.value = str(new_value)
-        self._be_change_param()
 
     def set_binary(self, new_value):
         """Set binary value"""
         self.value = self._string2hexascii(new_value)
-        self._be_change_param()
 
     #
     # Compound data types, get operations
@@ -228,27 +231,22 @@ class Parameter(NamespaceObject):
     def set_string_list(self, new_value):
         """Set string list value"""
         self.value = string.join(new_value)
-        self._be_change_param()
     
     def set_bool_list(self, new_value):
         """Set bool list value"""
-        self.value = map(self._bool2string, new_value)
-        self._be_change_param()
+        self.value = string.join(map(self._bool2string, new_value))
 
     def set_integer_list(self, new_value):
         """Set integer list value"""
-        self.value = map(str, new_value)
-        self._be_change_param()
+        self.value = string.join(map(str, new_value))
 
     def set_float_list(self, new_value):
         """Set float list value"""
-        self.value = map(str, new_value)
-        self._be_change_param()
+        self.value = string.join(map(str, new_value))
 
     def set_binary_list(self, new_value):
         """Set binary list value"""
-        self.value = map(self._string2hexascii, new_value)
-        self._be_change_param()
+        self.value = string.join(map(self._string2hexascii, new_value))
 
     #
     # Internal methods
@@ -311,7 +309,7 @@ class Folder(NamespaceObject):
         self.sources = []
         # URL to write to when adding new folder objects. 
         self.write_target = write_target
-        self.sectionname = sectionname
+        self.sectionname = fixup_sectionname(sectionname)
         self._update(source)
 
     def __repr__(self):
@@ -363,33 +361,96 @@ class Folder(NamespaceObject):
     # Get methods
     #
 
-    def get_string(self, objpath):
-        return self.lookup(objpath).get_string()
+    def _get_value(self, parampath, method):
+        param = self.lookup(parampath)
+        if not param:
+            return None
+        else:
+            return method(param)
 
-    # FIXME: The rest
+    def get_string(self, parampath):
+        return self._get_value(parampath, Parameter.get_string)
 
+    def get_bool(self, parampath):
+        return self._get_value(parampath, Parameter.get_bool)
+
+    def get_integer(self, parampath):
+        return self._get_value(parampath, Parameter.get_integer)
+
+    def get_float(self, parampath):
+        return self._get_value(parampath, Parameter.get_float)
+
+    def get_binary(self, parampath):
+        return self._get_value(parampath, Parameter.get_binary)
+
+    def get_string_list(self, parampath):
+        return self._get_value(parampath, Parameter.get_string_list)
+
+    def get_bool_list(self, parampath):
+        return self._get_value(parampath, Parameter.get_bool_list)
+
+    def get_integer_list(self, parampath):
+        return self._get_value(parampath, Parameter.get_integer_list)
+
+    def get_float_list(self, parampath):
+        return self._get_value(parampath, Parameter.get_float_list)
+    
+    def get_binary_list(self, parampath):
+        return self._get_value(parampath, Parameter.get_binary_list)
+    
     #
     # Set methods
     #
-    
-    # FIXME
-    def set_string(self, parampath, new_value):
+
+    def _set_value(self, parampath, value, method):
+        print "SET_VALUE", value, method
         comps = path2comps(parampath)
         folder = self._lookup_list(comps[:-1], autocreate=1) 
         paramname = comps[-1]
         param = folder.lookup(paramname)
         if not param:
-            # Add new parameter
-            # Write new params to the file specified by the Folders
-            # write_target
-            param = Parameter(new_value, folder.write_target,
+            # Create new parameter
+            param = Parameter(None, folder.write_target,
                               folder.sectionname, paramname)
+            # Set the value
+            method(param, value)
             folder._addobject(param, paramname)
             # Write new parameter to disk
             param._be_add_param()
         else:
             # Update existing parameter
-            param.set_string(new_value)
+            method(param, value)
+            param._be_change_param()
+
+    def set_string(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_string)
+        
+    def set_bool(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_bool)
+        
+    def set_integer(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_integer)
+        
+    def set_float(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_float)
+        
+    def set_binary(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_binary)
+        
+    def set_string_list(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_string_list)
+
+    def set_bool_list(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_bool_list)
+
+    def set_integer_list(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_integer_list)
+
+    def set_float_list(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_float_list)
+
+    def set_binary_list(self, parampath, value):
+        self._set_value(parampath, value, Parameter.set_binary_list)
 
     def lookup(self, objpath, autocreate=0):
         """Lookup an object. objname is like global/settings/background
