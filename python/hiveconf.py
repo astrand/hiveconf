@@ -28,6 +28,7 @@ import os
 import string
 import glob
 import getopt
+import re
 
 class _DebugWriter:
     def __init__(self, debug):
@@ -126,6 +127,24 @@ def _fixup_sectionname(sn):
         sn = sn[:-1]
     return sn
 
+def _check_write_access(url):
+    if _get_url_scheme(url) == "file":
+        path = _get_url_file(url)
+        return os.access(path, os.W_OK)
+    else:
+        # Cannot write to other URLs, currently
+        return 0
+
+def _check_create_possible(file):
+    """Check if it's possible to create this file"""
+    directory = os.path.dirname(file)
+    return os.access(dirname, W_OK)
+
+_glob_magic_check = re.compile('[*?[]')
+def _has_glob_wildchars(s):
+    return _glob_magic_check.search(s) is not None
+    
+
 #
 # End of utility functions
 #
@@ -135,7 +154,7 @@ class NamespaceObject:
 
 
 class Parameter(NamespaceObject):
-    def __init__(self, value, source, sectionname, paramname):
+    def __init__(self, value, source, sectionname, paramname, write_target):
         # This parameters value, in the external string representation
         self._value = value
         # URL that this parameter was read from
@@ -145,20 +164,35 @@ class Parameter(NamespaceObject):
         self.sectionname = sectionname
         # FIXME: The class probably shouldn't know about it's own name.
         self.paramname = paramname
+        self.write_target = write_target
 
     def __repr__(self):
-        return "<Parameter: %s  value=%s  section=%s  source=%s>" \
-               % (self.paramname, self._value, self.sectionname, self.source)
+        return "<Parameter: %s  value=%s  section=%s  source=%s  write_target=%s>" \
+               % (self.paramname, self._value, self.sectionname, self.source,
+                  self.write_target)
 
     def _be_add_param(self):
         """Add a new parameter to the backend"""
-        hfu = _HiveFileUpdater(self.source)
+        if not self.write_target:
+            print >>debugw, "_be_add_param(%s): no write_target" % self.paramname
+            return
+        
+        hfu = _HiveFileUpdater(self.write_target)
         hfu.add_parameter(self.sectionname, self.paramname, self._value)
 
     def _be_change_param(self):
         """Change the value of a existing parameter in the backend"""
-        hfu = _HiveFileUpdater(self.source)
-        hfu.change_parameter(self.sectionname, self.paramname, self._value)
+        if not self.write_target:
+            print >>debugw, "_be_change_param(%s): no write_target" % self.paramname
+            return
+        
+        if self.source != self.write_target:
+            # If we should write to another file than the parameter
+            # was read from, we should add, not change
+            self._be_add_param()
+        else:
+            hfu = _HiveFileUpdater(self.write_target)
+            hfu.change_parameter(self.sectionname, self.paramname, self._value)
 
     #
     # Primitive data types, get operations
@@ -305,8 +339,9 @@ class Folder(NamespaceObject):
         self._parameters = {}
         # List of URLs that has contributed to this Folder.
         self.sources = []
-        # URL to write to when adding new folder objects. 
-        self.write_target = write_target
+        # URL to write to when adding new folder objects.
+        self.write_target = None
+        self._update_write_target(write_target)
         self.sectionname = _fixup_sectionname(sectionname)
         self._update(source)
 
@@ -317,6 +352,11 @@ class Folder(NamespaceObject):
     def _update(self, source):
         if source:
             self.sources.append(source)
+            self._update_write_target(source)
+
+    def _update_write_target(self, write_target):
+        if not self.write_target and _check_write_access(write_target):
+            self.write_target = write_target
 
     def _be_write_section(self):
         hfu = _HiveFileUpdater(self.write_target)
@@ -423,7 +463,7 @@ class Folder(NamespaceObject):
         if not param:
             # Create new parameter
             param = Parameter(None, folder.write_target,
-                              folder.sectionname, paramname)
+                              folder.sectionname, paramname, folder.write_target)
             # Set the value
             method(param, value)
             folder._addobject(param, paramname)
@@ -516,6 +556,9 @@ class Folder(NamespaceObject):
     def walk(self, recursive=1, indent=None):
         if not indent:
             indent = _IndentPrinter()
+            # Print root folder in debug mode
+            if debugw.debug:
+                print >>indent, "/", str(self)
 
         # Print Parameters and values
         for (paramname, param) in self._parameters.items():
@@ -537,7 +580,7 @@ class Folder(NamespaceObject):
             if recursive:
                 folder.walk(recursive, indent)
             indent.change(-4)
-
+            
 
 def open_hive(url):
     hfp = _HiveFileParser(url)
@@ -564,6 +607,9 @@ class _HiveFileParser:
         curfolder = rootfolder
         linenum = 0
         sectionname = ""
+
+        # Section [/] is implicit
+        self.handle_section(rootfolder, "/", url)
 
         # Read & parse entire hive file
         while 1:
@@ -606,7 +652,11 @@ class _HiveFileParser:
                 paramvalue = paramvalue.strip()
                 print >>debugw, "Read parameter line", paramname
                 try:
-                    curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
+                    if _check_write_access(url):
+                        write_target = url
+                    else:
+                        write_target = curfolder.write_target
+                    curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname, write_target), paramname)
                 except ObjectExistsError:
                     print >>debugw, "Object '%s' already exists" % paramname
             else:
@@ -641,12 +691,12 @@ class _HiveFileParser:
             # Create folder
             if len(comps) == 1:
                 # last step
-                if not source:
-                    # If no source, inherit
-                    write_target = folder.write_target
-                else:
+                # If we have a source file and it's writable, make this
+                # the write_target. Otherwise, inherit. 
+                if source and _check_write_access(source):
                     write_target = source
-
+                else:
+                    write_target = folder.write_target
                 obj = Folder(source, write_target, sectionname)
             else:
                 obj = Folder(None, folder.write_target, sectionname)
@@ -690,6 +740,8 @@ class _HiveFileParser:
         if _get_url_scheme(mnturl) == "file":
             # Strip file:
             mnturl = _get_url_file(mnturl)
+            # Expand ~
+            mnturl = os.path.expanduser(mnturl)
             # Get source file directory
             src_base_dir = os.path.dirname(_get_url_file(url))
             # Construct new path, relative to source dir
@@ -697,13 +749,25 @@ class _HiveFileParser:
             
             # Glob local files
             urls_to_mount =[]
-            # FIXME: Warn if no files found?
             print >>debugw, "Globbing URL", mnturl
-            glob_result = glob.glob(os.path.expanduser(mnturl))
-            glob_result.sort()
-            for url_to_mount in glob_result:
-                # Add file: 
-                urls_to_mount.append(_fixup_url(url_to_mount))
+            glob_result = glob.glob(mnturl)
+            if glob_result:
+                glob_result.sort()
+                for url_to_mount in glob_result:
+                    # Add file: 
+                    urls_to_mount.append(_fixup_url(url_to_mount))
+            else:
+                # No files found. Create file if the URL had no wildcards
+                if not _has_glob_wildchars(mnturl):
+                    try:
+                        # Touch
+                        open(mnturl, "w")
+                    except IOError:
+                        print >>debugw, "Couldn't create", mnturl
+                    else:
+                        # Successfully created file
+                        urls_to_mount.append(_fixup_url(mnturl))
+                
             del glob_result
         else:
             urls_to_mount = [mnturl]
@@ -726,7 +790,7 @@ class _HiveFileParser:
                         paramname = value
 
                 paramvalue = urllib2.urlopen(mount_url).read()
-                curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
+                curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname, mount_url), paramname)
 
             else:
                 print >> sys.stderr, "%s: line %d: unsupported backend" % (url, linenum)
@@ -753,7 +817,15 @@ class _HiveFileUpdater:
 
         if parameter_offset == None:
             # The parameter was not found!
-            raise NoSuchParameterError()
+            # If we are adding a parameter to a section that is not
+            # in this file, we should create the section.
+            if new_param:
+                self.add_section(sectionname)
+                # Now we can add the parameter at the end.
+                f.seek(0, 2)
+                parameter_offset = f.tell()
+            else:
+                raise NoSuchParameterError()
 
         # Seek to parameter offset, and write new value
         f.seek(parameter_offset)
@@ -770,9 +842,13 @@ class _HiveFileUpdater:
         correct_section = 0 
 
         # If this parameter is at top level, we are already in the
-        # correct section when we start parsing. 
+        # correct section when we start parsing.
+        # FIXME: This is not very clean. We should probably push "[/]"
+        # into the file stream some way, instead
         if sectionname == "":
             correct_section = 1
+        if correct_section and new_param:
+            return f.tell()
 
         while 1:
             line_offset = f.tell()
