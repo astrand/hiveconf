@@ -1,7 +1,7 @@
-include MANIFEST.in CREDITS hiveconf.spec LICENSE Makefile create_pth.sh README TODO
+include MANIFEST.in CREDITS hiveconf.spec LICENSE Makefile setup.sh README TODO
 
 graft python
 graft etc
 graft doc
 
-global-exclude *~ *.pyo *.pyc .cvsignore
+global-exclude *~ *.pyo *.pyc .cvsignore #*#
