@@ -382,15 +382,18 @@ def open_hive(url, rootfolder=None):
 
 def mount_directive(args, curfolder, url, linenum):
     try:
-        opts, args = getopt.getopt(args, "t:")
+        opts, args = getopt.getopt(args, "t:a:")
     except getopt.GetoptError:
         print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
         return
 
     format = "hive"
+    format_args = ""
     for o, a in opts:
         if o == "-t":
             format = a
+        if o == "-a":
+            format_args = a
     
     if not len(args) == 1:
         print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
@@ -400,6 +403,19 @@ def mount_directive(args, curfolder, url, linenum):
     for mount_url in glob.glob(args[0]):
         if format == "hive":
             open_hive(mount_url, curfolder)
+            
+        elif format == "parameter": # FIXME: Separate function/module/library
+            paramname = "default" # FIXME
+
+            # Parse parameter specific options
+            for format_arg in format_args.split(","):
+                (name, value) = format_arg.split("=")
+                if name == "name":
+                    paramname = value
+
+            paramvalue = open(mount_url).read()
+            curfolder.addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
+            
         else:
             print >> sys.stderr, "%s: line %d: unsupported format" % (url, linenum)
             continue
