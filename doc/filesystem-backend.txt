@@ -1,0 +1,19 @@
+
+Overview
+--------
+With the "filesystem" backend, each parameter is stored its own
+file. The entire contents of this file is the parameter value. 
+
+
+Supported mount options
+-----------------------
+
+  name=<parametername>
+    Sets the name of the parameter. 
+
+
+Example
+-------
+
+[global]
+%mount -t filesystem -a name=workgroup /etc/workgroup.txt
