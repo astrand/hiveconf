@@ -1,46 +1,154 @@
+Hiveconf Python API
+===================
+
+Module contents
+===============
+
+Functions
+---------
+
+open_hive(hive_file)
+
+Open and parse hive file. Returns a folder instance, corresponding to
+the root folder in the configuration namespace. 
+
+Example:
+
+root = hiveconf.open_hive("/etc/samba/smb.conf")
 
 
-Open hive
-=========
-hive = hiveconf.open_hive("tst.hive")
-
-Returns a folder. 
-
-
-Read values
-===========
-hive.get_string("/colors/background")
-hive.get_bool()
-hive.get_integer()
-hive.get_float()
-hive.get_binary()
-
-hive.get_string_list()
-hive.get_bool_list()
-hive.get_integer_list()
-hive.get_float_list()
-hive.get_binary_list()
+Exceptions
+----------
+NoSuchParameterError
+NoSuchFolderError
+NoSuchObjectError
+ObjectExistsError
+InvalidObjectError
+NotAParameterError
+BadBoolFormat
+BadIntegerFormat
+BadFloatFormat
+BadBinaryFormat
+BadListFormat
+ReadOnlySource
 
 
-Set values
-==========
-hive.set_string("/colors/background", "blue")
-hive.set_bool("/colors/transparent_borders", 1)
-hive.set_integer()
-hive.set_float()
-hive.set_binary()
+Folder instance
+===============
 
-hive.set_string_list()
-hive.set_bool_list()
-hive.set_integer_list()
-hive.set_float_list()
-hive.set_binary_list()
+Methods for retrieving parameter values
+---------------------------------------
 
-If you set a parameter that doesn't exist, it will be created. 
+The following methods are used to retrieve parameters. The
+parameter_path is relative to the file given to open_hive(). The
+default_value can be used to specify a value to return, if the
+parameter is not found. 
+
+get_string(parameter_path, [default_value])
+
+Retrieve string. 
 
 
-Folder management etc
-=====================
-hive.lookup("/colors")
+get_bool(parameter_path, [default_value])
 
-hive.walk()
+Retrieve a bool value (1 or 0). Raises BadBoolFormat if the parameter
+cannot be recoqnized as a boolean. 
+
+
+get_integer(parameter_path, [default_value])
+
+Retrieve a integer value. Raises BadIntegerFormat if the parameter
+cannot be recoqnized as an integer. 
+
+
+get_float(parameter_path, [default_value])
+
+Retrieve a float value. Raises BadFloatFormat if the parameter cannot
+be recoqnized as a float value. 
+
+
+get_binary(parameter_path, [default_value])
+
+Retrieve a binary value (Python string). Raises BadBinaryFormat if the
+parameter cannot be recoqnized as a binary value. 
+
+
+get_string_list(parameter_path, [default_value])
+get_bool_list(parameter_path, [default_value])
+get_integer_list(parameter_path, [default_value])
+get_float_list(parameter_path, [default_value])
+get_binary_list(parameter_path, [default_value])
+
+List versions of the methods described above. 
+
+
+Example:
+
+log_size = root.get_float("/globals/max log size", 100.0)
+
+
+Methods for setting parameter values
+------------------------------------
+
+The following methods are used to set parameter values. The
+parameter_path is relative to the file given to open_hive(). If the
+parameter does not exist, if will be created. 
+
+set_string(parameter_path, value)
+
+Set a string value. 
+
+
+set_bool(parameter_path, value)
+
+Set a boolean value. 
+
+
+set_integer(parameter_path, value)
+
+Set an integer value. 
+
+
+set_float(parameter_path, value)
+
+Set a float value. 
+
+
+set_binary(parameter_path, value)
+
+Set a binary value. The value argument should be a Python string.
+
+
+set_string_list(parameter_path, value)
+set_bool_list(parameter_path, value)
+set_integer_list(parameter_path, value)
+set_float_list(parameter_path, value)
+set_binary_list(parameter_path, value)
+
+
+List versions of the methods described above. 
+
+
+Example: 
+
+root.set_bool("/globals/load printers", 1)
+
+
+Miscellaneous methods
+---------------------
+
+lookup(path, [autocreate=0])
+
+Lookup parameter or folder, relative to this folder. If autocreate is
+false and the object is not found, None will be returned. If
+autocreate is true and the object is not found, the path will be
+treated as a path of folders, which will be created. 
+
+
+walk([recursive=1])
+
+Walk the tree below this folder, and print every parameter and
+folder. If recursive is false, only print the contents of the current
+folder. 
+
+
