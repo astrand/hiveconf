@@ -1,0 +1,3 @@
+
+* Allow variable substitutions in hive files, like $(PID) etc?
+
