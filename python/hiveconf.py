@@ -275,9 +275,8 @@ class Parameter(NamespaceObject):
 
     def _hexascii2string(self, s):
         """Convert hexascii to string"""
-        # Remove all spaces from string
-        # FIXME: Remove other ws as well?
-        s = s.replace(" ", "")
+        # Remove all whitespace from string
+        s = s.translate(string.maketrans("", ""), string.whitespace)
         result = ""
         for x in range(len(s)/2):
             pair = s[x*2:x*2+2]
