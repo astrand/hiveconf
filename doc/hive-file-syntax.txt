@@ -50,8 +50,16 @@ Directives
     file (or other source) a parameter was read from, so it knows
     where to change a parameter on update.
 
-    <URL> can be a simple, relative filename, like
-    "../app.hive". Wildcard characters are allowed. 
+    URLs without a scheme are assumed to be local files. In this case,
+    two extra features are available:
+
+    * Filename globbing via wildcards, like 
+    "%mount hiveconf.d/*.hive". When there is more than one match, the
+    files will be mounted in lexical order. 
+
+    * Relative filenames, like "../app.hive". Files will be searched
+      relative to the file where the %mount statement occurs. 
+
 
     The following options are supported:
 
