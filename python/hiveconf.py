@@ -101,19 +101,16 @@ def _comps2path(comps):
         result += "/" + component
     return result
 
-def _fixup_url(url):
-    """Change url slightly, so that urllib can be used for POSIX paths"""
-    (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
-    if not scheme:
-        scheme = "file"
-
-    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+def _get_cwd_url():
+    """Get current working directory in URL format"""
+    return "file://" + os.getcwd() + "/"
 
 def _get_url_scheme(url):
+    """Get URL scheme"""
     return urlparse.urlsplit(url)[0]
 
-def _get_url_file(url):
-    """For URLs with file scheme, get path component"""
+def _get_url_path(url):
+    """Get URL path component"""
     return urlparse.urlsplit(url)[2]
 
 def _fixup_sectionname(sn):
@@ -126,7 +123,7 @@ def _fixup_sectionname(sn):
 
 def _check_write_access(url):
     if _get_url_scheme(url) == "file":
-        path = _get_url_file(url)
+        path = _get_url_path(url)
         return os.access(path, os.W_OK)
     else:
         # Cannot write to other URLs, currently
@@ -585,7 +582,8 @@ class Folder(NamespaceObject):
             
 
 def open_hive(url):
-    hfp = _HiveFileParser(url)
+    # Relative URLs should be resolved relative to _get_cwd_url().
+    hfp = _HiveFileParser(urlparse.urljoin(_get_cwd_url(), url))
     return hfp.parse()
 
 
@@ -599,7 +597,6 @@ class _HiveFileParser:
         if not url:
             url = self.url
         
-        url = _fixup_url(url)
         print >>debugw, "Opening URL", url
         file = urllib2.urlopen(url) 
 
@@ -716,7 +713,6 @@ class _HiveFileParser:
             return self._create_folders(obj, rest_comps, source, sectionname)
                                         
 
-
     def mount_directive(self, args, curfolder, url, linenum, sectionname):
         try:
             opts, args = getopt.getopt(args, "t:a:")
@@ -736,45 +732,11 @@ class _HiveFileParser:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
             return
 
-        mnturl = _fixup_url(args[0])
+        # Resolve URL, relative to the doc base URL
+        mnturl = urlparse.urljoin(url, args[0])
         del args
 
-        if _get_url_scheme(mnturl) == "file":
-            # Strip file:
-            mnturl = _get_url_file(mnturl)
-            # Expand ~
-            mnturl = os.path.expanduser(mnturl)
-            # Get source file directory
-            src_base_dir = os.path.dirname(_get_url_file(url))
-            # Construct new path, relative to source dir
-            mnturl = os.path.join(src_base_dir, mnturl)
-            
-            # Glob local files
-            urls_to_mount =[]
-            print >>debugw, "Globbing URL", mnturl
-            glob_result = glob.glob(mnturl)
-            if glob_result:
-                glob_result.sort()
-                for url_to_mount in glob_result:
-                    # Add file: 
-                    urls_to_mount.append(_fixup_url(url_to_mount))
-            else:
-                # No files found. Create file if the URL had no wildcards
-                if not _has_glob_wildchars(mnturl):
-                    try:
-                        # Touch
-                        open(mnturl, "w")
-                    except IOError:
-                        print >>debugw, "Couldn't create", mnturl
-                    else:
-                        # Successfully created file
-                        urls_to_mount.append(_fixup_url(mnturl))
-                
-            del glob_result
-        else:
-            urls_to_mount = [mnturl]
-
-        for mount_url in urls_to_mount:
+        for mount_url in self._get_urls_to_mount(mnturl):
             if backend == "hivefile":
                 self.parse(mount_url, curfolder)
 
@@ -798,6 +760,37 @@ class _HiveFileParser:
                 print >> sys.stderr, "%s: line %d: unsupported backend" % (url, linenum)
                 continue
 
+
+    def _get_urls_to_mount(self, mnturl):
+        if _get_url_scheme(mnturl) == "file":
+            # Strip file://
+            mntpath = _get_url_path(mnturl)
+            # Expand ~
+            mntpath = os.path.expanduser(mntpath)
+            # Glob local files
+            urls_to_mount =[]
+            print >>debugw, "Globbing path", mntpath
+            glob_result = glob.glob(mntpath)
+            if glob_result:
+                glob_result.sort()
+                for file_to_mount in glob_result:
+                    urls_to_mount.append("file://" + file_to_mount)
+            else:
+                # No files found. Create file if the path had no wildcards
+                if not _has_glob_wildchars(mntpath):
+                    try:
+                        # Touch
+                        open(mntpath, "w")
+                    except IOError:
+                        print >>debugw, "Couldn't create", mntpath
+                    else:
+                        # Successfully created file
+                        urls_to_mount.append("file://" + mntpath)
+                
+        else:
+            urls_to_mount = [mnturl]
+
+        return urls_to_mount
         
 
 class _HiveFileUpdater:
