@@ -1,6 +1,4 @@
 
-* Fully support read-only URLs, thus enabling mandatory setings. 
-
 * Methods for removing parameters and folders. 
 
 * Methods for asking which file a certain parameter resides in. 
