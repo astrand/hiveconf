@@ -698,6 +698,7 @@ class _HiveFileParser:
             # Glob local files
             urls_to_mount =[]
             # FIXME: Warn if no files found?
+            print >>debugw, "Globbing URL", mnturl
             glob_result = glob.glob(os.path.expanduser(mnturl))
             glob_result.sort()
             for url_to_mount in glob_result:
