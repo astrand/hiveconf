@@ -51,17 +51,20 @@ def handle_param(hive, param):
 
 def usage():
     print >>sys.stderr, """
-hivetool [options] parameter[=value] ...
+hivetool [options] [type:]parameter[=value] ...
 
   -a,--all-entries      Print all parameters and values in a folder
   -R,--recursive	When using -a, ascend folders recursively
-  -t,--type <type>	Set type for the next listed parameters. Type is one of:
-			string, bool, integer, float, binary,
-			string_list, bool_list, integer_list, float_list, binary_list
-			Default is string
   -r,--root <file>	Specify root hive file. Default is /etc/root.hive
   -v,--version		Print version
   -?,--help		Show this help message
+
+  type is one of: string, bool, integer, float, binary, stringlist,
+  boollist, integerlist, floatlist, binarylist. Default is string
+
+  Example:
+
+  hivetool -r /etc/samba/smb.conf /global/workgroup=MYWORKGROUP
 """
 
 
