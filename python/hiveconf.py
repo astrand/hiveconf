@@ -1,5 +1,6 @@
 #
-# Copyright (C) 2003  Peter Åstrand <astrand@lysator.liu.se>
+# Copyright (C) 2003 by Cendio Systems
+# Author: Peter Astrand <peter@cendio.se>
 # 
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation
