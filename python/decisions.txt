@@ -1,0 +1,3 @@
+
+* About slashes: The standard is a slash at the start, but no at the
+  end, like "/global".
