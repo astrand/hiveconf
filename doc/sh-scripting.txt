@@ -1,0 +1,41 @@
+Using Hiveconf in shell scripts
+===============================
+
+It's fairly easy to get and set parameters in Hiveconf from shell
+scripts, via the tool "hivetool". 
+
+Please not that the information in this file is only relevant to
+SH-like shells, like Bash and zsh. csh-like shells are not covered.
+
+
+Getting values
+--------------
+If you want to get a single parameter value, you can do:
+
+WORKGROUP=`hivetool /services/samba/global/workgroup`
+
+However, if you want to get many parameters, the delay introduced by
+hivetool can be a problem. In this case, you can use the -e
+parameter. Example:
+
+    eval `hivetool \
+        -e WORKGROUP=/services/samba/global/workgroup \
+        -e SECURITY=/services/samba/global/security`
+
+The variables WORKGROUP and SECURITY will now contain the workgroup
+and security parameter values.
+
+
+Setting values
+--------------
+There is no magic in setting variables from shell scripts. Here is an
+example:
+
+    WORKGROUP=MYNEWGROUP
+    hivetool /services/samba/global/workgroup=$MYWORKGROUP
+
+If the parameter path and/or value contains spaces, remember to
+quote. Example:
+
+    hivetool "/services/samba/global/server string=Fast server"
+
