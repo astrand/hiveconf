@@ -160,7 +160,8 @@ attribute namespace
 
 hive
 
-    A tree of parameters and folders, defined by a single URL. 
+    A tree of parameters and folders, defined by a single URL. The
+    standard file extension is .hconf.
  
     This term is actually borrowed from the Windows registry. The MS
     definition is:
