@@ -120,10 +120,22 @@ class Parameter(NamespaceObject):
     def __init__(self, value, source, sectionname, paramname):
         self.value = value
         # URL that this parameter was read from
+        if not source:
+            raise "No source!" # FIXME
         self.source = source
         self.sectionname = sectionname
         # FIXME: The class probably shouldn't know about it's own name.
         self.paramname = paramname
+
+    def _be_add_param(self):
+        """Add a new parameter to the backend"""
+        hfu = HiveFileUpdater(self.source)
+        hfu.add_parameter(self.sectionname, self.paramname, self.value)
+
+    def _be_change_param(self):
+        """Change the value of a existing parameter in the backend"""
+        hfu = HiveFileUpdater(self.source)
+        hfu.change_parameter(self.sectionname, self.paramname, self.value)
 
     #
     # Primitive data types, get operations
@@ -165,21 +177,28 @@ class Parameter(NamespaceObject):
     #
     def set_string(self, new_value):
         """Set string value"""
-        u = HiveFileUpdater(self.source)
-        u.change_parameter(self.sectionname, self.paramname, new_value)
+        self.value = new_value
+        self._be_change_param()
 
     def set_bool(self, new_value):
         """Set bool value"""
-        self.set_string(self._bool2string(new_value))
+        self.value = self._bool2string(new_value)
+        self._be_change_param()
 
     def set_integer(self, new_value):
-        self.set_string(str(new_value))
+        """Set integer value"""
+        self.value = str(new_value)
+        self._be_change_param()
 
     def set_float(self, new_value):
-        self.set_string(str(new_value))
+        """Set float value"""
+        self.value = str(new_value)
+        self._be_change_param()
 
     def set_binary(self, new_value):
-        self.set_string(self._string2hexascii(new_value))
+        """Set binary value"""
+        self.value = self._string2hexascii(new_value)
+        self._be_change_param()
 
     #
     # Compound data types, get operations
@@ -203,19 +222,29 @@ class Parameter(NamespaceObject):
     # Compound data types, set operations
     #
     def set_string_list(self, new_value):
-        self.set_string(string.join(new_value))
+        """Set string list value"""
+        self.value = string.join(new_value)
+        self._be_change_param()
     
     def set_bool_list(self, new_value):
-        self.set_string_list(map(self._bool2string, new_value))
+        """Set bool list value"""
+        self.value = map(self._bool2string, new_value)
+        self._be_change_param()
 
     def set_integer_list(self, new_value):
-        self.set_string_list(map(str, new_value))
+        """Set integer list value"""
+        self.value = map(str, new_value)
+        self._be_change_param()
 
     def set_float_list(self, new_value):
-        self.set_string_list(map(str, new_value))
+        """Set float list value"""
+        self.value = map(str, new_value)
+        self._be_change_param()
 
     def set_binary_list(self, new_value):
-        self.set_string_list(map(self._string2hexascii, new_value))
+        """Set binary list value"""
+        self.value = map(self._string2hexascii, new_value)
+        self._be_change_param()
 
     #
     # Internal methods
@@ -285,7 +314,7 @@ class Folder(NamespaceObject):
         if source:
             self.sources.append(source)
 
-    def _write_section(self):
+    def _be_write_section(self):
         hfu = HiveFileUpdater(self.write_target)
         hfu.add_section(self.sectionname)
 
@@ -345,15 +374,11 @@ class Folder(NamespaceObject):
             # Add new parameter
             # Write new params to the file specified by the Folders
             # write_target
-            source = folder.write_target
-            folder._addobject(Parameter(new_value, source,
-                                        folder.sectionname, paramname), paramname)
+            param = Parameter(new_value, folder.write_target,
+                              folder.sectionname, paramname)
+            folder._addobject(param, paramname)
             # Write new parameter to disk
-            # This should be done by parsing the folders write_target file
-            # and fins the correct section, and then add this parameter just
-            # below the section line.
-            # FIXME
-            
+            param._be_add_param()
         else:
             # Update existing parameter
             param.set_string(new_value)
@@ -395,7 +420,7 @@ class Folder(NamespaceObject):
             # Last step in recursion
             if create_folder:
                 # Last component, sync to disk
-                obj._write_section()
+                obj._be_write_section()
                 # Set source
                 obj._update(obj.write_target)
             
@@ -595,14 +620,30 @@ class HiveFileUpdater:
             # Only able to write to local files right now
             raise ReadOnlySource()
 
-    def change_parameter(self, sectionname, paramname, new_value):
+    def change_parameter(self, sectionname, paramname, value, new_param=0):
         """Change existing parameter line in file"""
         # FIXME: Use file locking
         f = open(self.filename, "r+")
+        parameter_offset = self._find_offset(f, sectionname, paramname, new_param)
+        rest_data = f.read()
 
+        if parameter_offset == None:
+            # The parameter was not found!
+            raise NoSuchParameterError()
+
+        # Seek to parameter offset, and write new value
+        f.seek(parameter_offset)
+        print >> f, paramname + "=" + value
+
+        # Write rest
+        f.write(rest_data)
+        f.truncate()
+
+    def add_parameter(self, sectionname, paramname, value):
+        self.change_parameter(sectionname, paramname, value, new_param=1)
+
+    def _find_offset(self, f, sectionname, paramname, new_param=0):
         correct_section = 0 
-        rest_data = ""
-        parameter_offset = None
 
         # If this parameter is at top level, we are already in the
         # correct section when we start parsing. 
@@ -628,26 +669,19 @@ class HiveFileUpdater:
                     continue
 
                 correct_section = (sectionname == line[1:-1])
+                if correct_section and new_param:
+                    # If we have found the correct section,
+                    # we should add new parameters just below it.
+                    return f.tell()
                 
             elif correct_section and line.find("=") != -1:
                 (line_paramname, line_paramvalue) = line.split("=", 1)
                 line_paramname = line_paramname.strip()
                 if paramname == line_paramname:
-                    parameter_offset = line_offset
-                    rest_data = f.read()
-                    break
+                    return line_offset
 
-        if parameter_offset == None:
-            # The parameter was not found!
-            raise NoSuchParameterError()
+        return None
 
-        # Seek to parameter offset, and write new value
-        f.seek(parameter_offset)
-        print >> f, paramname + "=" + new_value
-
-        # Write rest
-        f.write(rest_data)
-        f.truncate()
 
     def add_section(self, sectionname):
         """Add new section to end of file"""
