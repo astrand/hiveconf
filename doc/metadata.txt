@@ -1,0 +1,33 @@
+
+Meta-data support in Hiveconf
+=============================
+
+The support for meta-data in Hiveconf is not implemented yet. The
+design is mostly finished, though. The idea is that a "attribute
+namespace" should be defined, using the same mechanism as for the
+normal "configuration namespace". The only difference is that
+all parameters in the attribute namespace begins with %. There is a
+correspondence between the attribute namespace and the configuration
+namespace: Every parameter in the configuration namespace corresponds
+to a folder in the attribute namespace. An example might help:
+
+The parameter /global/workgroup is defined in
+/etc/samba/smb.hconf. This parameter corresponds to the folder
+%/global/workgroup in the attribute namespace. This folder can contain
+parameters ("attributes") describing the parameter /global/workgroup,
+like information about legal values. 
+
+Attributes can be defined in the same hive files as where normal
+parameters are defined, or in separate files. Here is an example:
+
+/etc/samba/smb.hconf:
+
+    [/global]
+    workgroup = MYWORKGROUP
+    
+    [%/global/workgroup]
+    datatype=string
+    
+
+The attribute names should be standardized, so that tools can know
+their semantics. No attribute names are currently defined. 
