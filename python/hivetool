@@ -52,7 +52,7 @@ def usage():
 hivetool [options] parameter[=value] ...
 
   -a,--all-entries      Print all parameters and values in a folder
-  -R,--recursive	Like -a, but ascend folders recursively
+  -R,--recursive	When using -a, ascend folders recursively
   -t,--type <type>	Set type for the next listed parameters. Type is one of:
 			string, bool, integer, float, binary,
 			stringlist, boollist, integerlist, floatlist, binarylist
@@ -66,18 +66,20 @@ hivetool [options] parameter[=value] ...
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aRr:v?",
-                                   ["all-entries", "recursive", "root=", "version", "help"])
+        opts, args = getopt.getopt(sys.argv[1:], "a:Rr:v?",
+                                   ["all-entries=", "recursive", "root=", "version", "help"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
 
     roothive = "/etc/hive.root"
+    walk_folders = []
+    recursive = 0
     for o, a in opts:
         if o in ("-a", "--all-entries"):
-            raise NotImplementedError
+            walk_folders.append(a)
         if o in ("-R", "--recursive"):
-            raise NotImplementedError
+            recursive = 1
         if o in ("-r", "--root"):
             roothive = a
         if o in ("-v", "--version"):
@@ -90,8 +92,18 @@ def main():
     # Try to open root hive
     hive = hiveconf.open_hive(roothive)
 
+    # Get/set listed parameters
     for param in args:
         handle_param(hive, param)
+
+    # Walk
+    for foldername in walk_folders:
+        folder = hive.lookup(foldername)
+        if not folder:
+            print >>sys.stderr, "Folder '%s' not found" % foldername
+            continue
+
+        folder.walk(recursive)
 
 
 if __name__ == "__main__":
