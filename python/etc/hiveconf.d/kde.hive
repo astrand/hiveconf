@@ -1,177 +1,177 @@
 
-[kde]
+[/desktops/kde]
 %mount /etc/kderc
 
-[kde/charsets]
+[/desktops/kde/charsets]
 %mount /usr/share/config/charsets
 
-[kde/kdebug]
+[/desktops/kde/kdebug]
 %mount /usr/share/config/kdebugrc
 
-[kde/kdm]
+[/desktops/kde/kdm]
 %mount /etc/X11/xdm/kdmrc
 
-[kde/ant]
+[/desktops/kde/ant]
 %mount /usr/share/config/antrc
 
-[kde/attraction]
+[/desktops/kde/attraction]
 %mount /usr/share/config/attractionrc
 
-[kde/bouboule]
+[/desktops/kde/bouboule]
 %mount /usr/share/config/bouboulerc
 
-[kde/bubbles]
+[/desktops/kde/bubbles]
 %mount /usr/share/config/bubblesrc
 
-[kde/clockapplet]
+[/desktops/kde/clockapplet]
 %mount /usr/share/config/clockappletrc
 
-[kde/coral]
+[/desktops/kde/coral]
 %mount /usr/share/config/coralrc
 
-[kde/crystal]
+[/desktops/kde/crystal]
 %mount /usr/share/config/crystalrc
 
-[kde/decayscreen]
+[/desktops/kde/decayscreen]
 %mount /usr/share/config/decayscreenrc
 
-[kde/deluxe]
+[/desktops/kde/deluxe]
 %mount /usr/share/config/deluxerc
 
-[kde/demon]
+[/desktops/kde/demon]
 %mount /usr/share/config/demonrc
 
-[kde/drift]
+[/desktops/kde/drift]
 %mount /usr/share/config/driftrc
 
-[kde/epicycle]
+[/desktops/kde/epicycle]
 %mount /usr/share/config/epicyclerc
 
-[kde/fadeplot]
+[/desktops/kde/fadeplot]
 %mount /usr/share/config/fadeplotrc
 
-[kde/flame]
+[/desktops/kde/flame]
 %mount /usr/share/config/flamerc
 
-[kde/flow]
+[/desktops/kde/flow]
 %mount /usr/share/config/flowrc
 
-[kde/forest]
+[/desktops/kde/forest]
 %mount /usr/share/config/forestrc
 
-[kde/gears]
+[/desktops/kde/gears]
 %mount /usr/share/config/gearsrc
 
-[kde/goop]
+[/desktops/kde/goop]
 %mount /usr/share/config/gooprc
 
-[kde/grav]
+[/desktops/kde/grav]
 %mount /usr/share/config/gravrc
 
-[kde/halo]
+[/desktops/kde/halo]
 %mount /usr/share/config/halorc
 
-[kde/imsmap]
+[/desktops/kde/imsmap]
 %mount /usr/share/config/imsmaprc
 
-[kde/interference]
+[/desktops/kde/interference]
 %mount /usr/share/config/interferencerc
 
-[kde/desktop]
+[/desktops/kde/desktop]
 %mount /usr/share/config/kdesktoprc
 
-[kde/klipper]
+[/desktops/kde/klipper]
 %mount /usr/share/config/klipperrc
 
-[kde/minipagerapplet]
+[/desktops/kde/minipagerapplet]
 %mount /usr/share/config/kminipagerappletrc
 
-[kde/konqueror]
+[/desktops/kde/konqueror]
 %mount /usr/share/config/konquerorrc
 
-[kde/konsole]
+[/desktops/kde/konsole]
 %mount /usr/share/config/konsolerc
 
-[kde/kshorturifilter]
+[/desktops/kde/kshorturifilter]
 %mount /usr/share/config/kshorturifilterrc
 
-[kde/kstyle]
+[/desktops/kde/kstyle]
 %mount /usr/share/config/kstylerc
 
-[kde/kumppa]
+[/desktops/kde/kumppa]
 %mount /usr/share/config/kumpparc
 
-[kde/kuriikwsfilter]
+[/desktops/kde/kuriikwsfilter]
 %mount /usr/share/config/kuriikwsfilterrc
 
-[kde/kwin]
+[/desktops/kde/kwin]
 %mount /usr/share/config/kwinrc
 
-[kde/laser]
+[/desktops/kde/laser]
 %mount /usr/share/config/laserrc
 
-[kde/lissie]
+[/desktops/kde/lissie]
 %mount /usr/share/config/lissierc
 
-[kde/penrose]
+[/desktops/kde/penrose]
 %mount /usr/share/config/penroserc
 
-[kde/rocks]
+[/desktops/kde/rocks]
 %mount /usr/share/config/rocksrc
 
-[kde/slip]
+[/desktops/kde/slip]
 %mount /usr/share/config/sliprc
 
-[kde/kcmnsplugin]
+[/desktops/kde/kcmnsplugin]
 %mount /usr/share/config/kcmnspluginrc
 
-[kde/globals]
+[/desktops/kde/globals]
 %mount /usr/share/config/kdeglobals
 
-[kde/kdeprint]
+[/desktops/kde/kdeprint]
 %mount /usr/share/config/kdeprintrc
 
-[kde/kdewizard]
+[/desktops/kde/kdewizard]
 %mount /usr/share/config/kdewizardrc
 
-[kde/kicker]
+[/desktops/kde/kicker]
 %mount /usr/share/config/kickerrc
 
-[kde/klaunch]
+[/desktops/kde/klaunch]
 %mount /usr/share/config/klaunchrc
 
-[kde/knotify.events]
+[/desktops/kde/knotify.events]
 %mount /usr/share/config/knotify.eventsrc
 
-[kde/knotify]
+[/desktops/kde/knotify]
 %mount /usr/share/config/knotifyrc
 
-[kde/konqsidebartng]
+[/desktops/kde/konqsidebartng]
 %mount /usr/share/config/konqsidebartng.rc
 
-[kde/korgac]
+[/desktops/kde/korgac]
 %mount /usr/share/config/korgacrc
 
-[kde/korganizer]
+[/desktops/kde/korganizer]
 %mount /usr/share/config/korganizerrc
 
-[kde/ksmserver]
+[/desktops/kde/ksmserver]
 %mount /usr/share/config/ksmserverrc
 
-[kde/ksslcalist]
+[/desktops/kde/ksslcalist]
 %mount /usr/share/config/ksslcalist
 
-[kde/ksysv]
+[/desktops/kde/ksysv]
 %mount /usr/share/config/ksysvrc
 
-[kde/kthemestyle]
+[/desktops/kde/kthemestyle]
 %mount /usr/share/config/kthemestylerc
 
-[kde/kuser]
+[/desktops/kde/kuser]
 %mount /usr/share/config/kuserrc
 
-[kde/kwrited]
+[/desktops/kde/kwrited]
 %mount /usr/share/config/kwritedrc
 
-[kde/profile]
+[/desktops/kde/profile]
 %mount /usr/share/config/profilerc
