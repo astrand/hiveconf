@@ -321,12 +321,13 @@ def fixup_url(url):
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
 
-def open_hive(url):
+def open_hive(url, rootfolder=None):
     """Open and parse a hive file. Returns a folder"""
     url = fixup_url(url)
     file = urllib2.urlopen(url)
-    
-    rootfolder = Folder()
+
+    if not rootfolder:
+        rootfolder = Folder()
     curfolder = rootfolder
     linenum = 0
     sectionname = ""
@@ -352,6 +353,12 @@ def open_hive(url):
             sectionname = line[1:-1]
             print >>debugw, "Read section line", sectionname
             curfolder = rootfolder.lookup(sectionname, autocreate=1)
+        elif line.startswith("%"):
+            # Directive
+            (directive, arguments) = line.split(None, 1)
+            if directive == "%mount":
+                open_hive(arguments, curfolder)
+            
         elif line.find("=") != -1:
             # Parameter
             (paramname, paramvalue) = line.split("=", 1)
