@@ -1,0 +1,9 @@
+
+Hiveconf FAQ
+============
+
+Q1: What happens if the same parameter is defined in several places?
+
+A1: The first occurence will be used. 
+
+
