@@ -1,6 +1,14 @@
 
 * hivetool: Methods for removing parameters and folders. 
 
+* Bug: When using the clarence example, this is whats ends up in
+~/.clay/clarence.hconf:
+
+last_expression=
+remember_expression=false
+remember_expression=true
+ascii_only=true
+
 * Methods for asking which file a certain parameter resides in. 
 
 * GUI-editor, like Windows regedit och GConf gconf-editor. 
