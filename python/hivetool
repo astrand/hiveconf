@@ -7,7 +7,7 @@ import sys
 
 VERSION="0.0"
 DEFAULT_TYPE="string"
-DEFAULT_ROOT_HIVE="/etc/root.hive"
+DEFAULT_ROOT_HIVE="/etc/root.hconf"
 
 def get_type(s):
     """Parse parameter string. Returns (type, parameter)"""
@@ -55,7 +55,7 @@ hivetool [options] [type:]parameter[=value] ...
 
   -a,--all-entries      Print all parameters and values in a folder
   -R,--recursive	When using -a, ascend folders recursively
-  -r,--root <file>	Specify root hive file. Default is /etc/root.hive
+  -r,--root <file>	Specify root hive file. Default is /etc/root.hconf
   -v,--version		Print version
   -?,--help		Show this help message
 

@@ -5,7 +5,7 @@ import hiveconf
 
 
 def main():
-    hive = hiveconf.open_hive("tst.hive")
+    hive = hiveconf.open_hive("tst.hconf")
 
     #comps = hiveconf.path2comps("/foppa/bettan/lotta")
     #hiveconf._create_folders(hive, comps, None)

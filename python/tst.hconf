@@ -33,7 +33,7 @@ hostkeys=616161 626262
 
 
 [foo] 
-%mount tstinc.hive
+%mount tstinc.hconf
 
 
 #%mount -t hive /tmp/hive.d/* 
@@ -46,5 +46,5 @@ hostkeys=616161 626262
 iilist=1 2 3 4
 storlek=true
 
-[/globals]
-workgroup = PETER
+[/smak]
+%mount -t filesystem -a name=vvvvvv foo.param
