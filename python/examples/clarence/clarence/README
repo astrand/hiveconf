@@ -1,0 +1,99 @@
+
+---- CLARENCE v0.2.2
+---- (Programmer's calculator)
+
+
+Overview
+========
+Clarence is a small frontend to eval function with some enhancements. It was
+entirely written in Python using PyGtk bindings.
+
+
+Comment
+=======
+Clarence is second release of d.u.p.a. software package, wich - upon finish - will
+supply a Dynamic Update Programmers Assembly. Standard (this one) release is
+a simplified programmers edition, while Extended release, availible only under
+LowProfile Linux Distribution varies in capabilities and requrements due to
+open plugin architecture. Heuristic, OpenGL and will be released in near future.
+
+
+Requirements
+============
+You will need following packages to run Clarence:
+
+Python - http://www.python.org
+PyGtk  - http://www.daa.com.au/~james/pygtk/
+
+
+Avaiable operators, functions and constants
+===========================================
+
+  +--------------------------+--------------------------------------------------+
+  |  |                       |  Bitwise OR                                      |
+  |  ^                       |  Bitwise XOR                                     |
+  |  &                       |  Bitwise AND                                     |
+  |  ~x                      |  Bitwise NOT                                     |
+  |  <<, >>                  |  Shifts                                          |
+  |  +                       |  Addition                                        |
+  |  -                       |  Subtraction                                     |
+  |  *                       |  Multiplication                                  |
+  |  /                       |  Division                                        |
+  |  %                       |  Remainder                                       |
+  |  **                      |  Exponentiation                                  |
+  |  +x, -x                  |  Positive, negative                              |
+  |  acircle(r)              |  Return the area of circle.                      |
+  |  acos (x)                |  Return the arc cosine of x.                     |
+  |  and                     |  Boolean AND                                     |
+  |  ans ()                  |  Return last result.                             |
+  |  asc ("something")       |  Return value for last four ASCII chars.         |
+  |  asin (x)                |  Return the arc sine of x.                       |
+  |  atan (x)                |  Return the arc tangent of x.                    |
+  |  atan2 (y, x)            |  Return atan(y / x).                             |
+  |  bin ("10100010110")     |  Return value of binary string.                  |
+  |  ceil (x)                |  Return the ceiling of x as a real.              |
+  |  cos (x)                 |  Return the cosine of x.                         |
+  |  cosh (x)                |  Return the hyperbolic cosine of x.              |
+  |  e                       |  The mathematical constant e.                    |
+  |  exp (x)                 |  Return e**x.                                    |
+  |  fabs (x)                |  Return the absolute value of the real x.        |
+  |  floor (x)               |  Return the floor of x as a real.                |
+  |  fmod (x, y)             |  Return x % y.                                   |
+  |  hypot (x, y)            |  Return the Euclidean distance, sqrt(x*x + y*y). |
+  |  ldexp (x, i)            |  Return x * (2**i).                              |
+  |  log (x)                 |  Return the natural logarithm of x.              |
+  |  log10 (x)               |  Return the base-10 logarithm of x.              |
+  |  max(x0, x1, ...)        |  Return the biggest element.                     |
+  |  min(x0, x1, ...)        |  Return the smallest element.                    |
+  |  not x                   |  Boolean NOT                                     |
+  |  or                      |  Boolean OR                                      |
+  |  pcircle(r)              |  Return the perimeter of circle.                 |
+  |  pi                      |  The mathematical constant pi.                   |
+  |  pow (x, y)              |  Return x**y.                                    |
+  |  rnd()                   |  Return the random number in the                 |
+  |                          |    range [0.0 , 1.0).                            |
+  |  round(x, n)             |  Return the floating point value x rounded       |
+  |                          |    to n digits after the decimal point.          |
+  |  sasphere(r)             |  Return the surface area of sphere.              |
+  |  sin (x)                 |  Return the sine of x.                           |
+  |  sinh (x)                |  Return the hyperbolic sine of x.                |
+  |  sqrt (x)                |  Return the square root of x.                    |
+  |  tan (x)                 |  Return the tangent of x.                        |
+  |  tanh (x)                |  Return the hyperbolic tangent of x.             |
+  |  urnd(a, b)              |  Return the random number in the                 |
+  |                          |    range [a ... b].                              |
+  |  vcone(r,h)              |  Return the volume of cone.                      |
+  |  vcylinder(r,h)          |  Return the volume of cylinder.                  |
+  |  vl2d(x0,y0,x1,y1)       |  Return the length of vector (2D).               |
+  |  vl3d(x0,y0,z0,x1,y1,z1) |  Return the length of vector (3D).               |
+  |  vsphere(r)              |  Return the volume of sphere.                    |
+  |  bits(x)                 |  Return the number of set bits.                  |
+  +--------------------------+--------------------------------------------------+
+
+
+Comments
+========
+
+cheese! :)
+
+

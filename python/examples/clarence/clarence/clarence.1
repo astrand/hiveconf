@@ -1,0 +1,145 @@
+.TH "clarence" "1" "0.2.1" "Tomasz Maka" "math, science, python, pygtk"
+.SH "NAME"
+\fIclarence\fR \- programmer's scientific calculator for X
+.SH "SYNOPSIS"
+\fBclarence.py\fR [\-h] [\-\-help] [\-v] [\-\-version] [\-m] [\-\-disable\-menu]
+.SH "DESCRIPTION"
+\fIClarence\fR is a programmer's scientific calculator writen in Python. It has gui based on PyGTK, uses all Python's operators, math module functions and constants. It can handle all basic numerical formats including Dec, Hex, Bin, Oct, and ASCII. Expressions can be entered in an entry field without mouse operations (no more buttons).
+.SH "OPERATIONS"
+Avaiable operators, functions and constants:
+
+\fBor\fR \- Boolean OR
+
+\fBand\fR \- Boolean AND
+
+\fBnot x\fR \- Boolean NOT
+
+\fB|\fR \- Bitwise OR
+
+\fB^\fR \- Bitwise XOR
+
+\fB&\fR \- Bitwise AND
+
+\fB~x\fR \- Bitwise NOT
+
+\fB<<, >>\fR \- Shifts
+
+\fB+\fR \- Addition
+
+\fB\-\fR \- Subtraction
+
+\fB*\fR \- Multiplication
+
+\fB/\fR \- Division
+
+\fB%\fR \- Remainder
+
+\fB**\fR \- Exponentiation
+
+\fB+x, \-x\fR \- Positive, negative
+
+\fBacircle(r)\fR \- Return the area of circle.
+
+\fBacos (x)\fR \- Return the arc cosine of x.
+
+\fBans ()\fR \- Return last result.
+
+\fBasc ("something")\fR \- Return value for last four ASCII chars.
+
+\fBasin (x)\fR \- Return the arc sine of x.
+
+\fBatan (x)\fR \- Return the arc tangent of x.
+
+\fBatan2 (y, x)\fR \- Return atan(y / x).
+
+\fBbin ("10100010110")\fR \- Return value of binary string.
+
+\fBceil (x)\fR \- Return the ceiling of x as a real.
+
+\fBcos (x)\fR \- Return the cosine of x.
+
+\fBcosh (x)\fR \- Return the hyperbolic cosine of x.
+
+\fBe\fR \- The mathematical constant e.
+
+\fBexp (x)\fR \- Return e^x.
+
+\fBfabs (x)\fR \- Return the absolute value of the real x.
+
+\fBfloor (x)\fR \- Return the floor of x as a real.
+
+\fBfmod (x, y)\fR \- Return x % y.
+
+\fBhypot (x, y)\fR \- Return the Euclidean distance, sqrt(x*x + y*y).
+
+\fBldexp (x, i)\fR \- Return x * (2**i). 
+
+\fBlog (x)\fR \- Return the natural logarithm of x.
+
+\fBlog10 (x)\fR \- Return the base\-10 logarithm of x.
+
+\fBmax(x0, x1, ...)\fR \- Return the biggest element.
+
+\fBmin(x0, x1, ...)\fR \- Return the smallest element.
+
+\fBpcircle(r)\fR \- Return the perimeter of circle.
+
+\fBpi\fR \- The mathematical constant pi.
+
+\fBpow (x, y)\fR \- Return x^y.
+
+\fBrnd()\fR \- Return the random number in the range [0.0 ... 1.0).
+
+\fBround(x, n)\fR \- Return the floating point value x rounded to n digits.
+
+\fBsasphere(r)\fR \- Return the surface area of sphere.
+
+\fBsin (x)\fR \- Return the sine of x.
+
+\fBsinh (x)\fR \- Return the hyperbolic sine of x.
+
+\fBsqrt (x)\fR \- Return the square root of x.
+
+\fBtan (x)\fR \- Return the tangent of x.
+
+\fBtanh (x)\fR \- Return the hyperbolic tangent of x.
+
+\fBurnd(a, b)\fR \- Return the random number in the range [a ... b].
+
+\fBvcone(r,h)\fR \- Return the volume of cone.
+
+\fBvcylinder(r,h)\fR \- Return the volume of cylinder.
+
+\fBvl2d(x0,y0,x1,y1)\fR \- Return the length of vector (2D).
+
+\fBvl3d(x0,y0,z0,x1,y1,z1)\fR \- Return the length of vector (3D).
+
+\fBvsphere(r)\fR \- Return the volume of sphere.
+
+\fBbits(x)\fR \- return the number of set bits.
+.SH "OPTIONS"
+Available Command Line Parameters:
+
+\fB\-h, \-\-help\fR
+.br 
+		Display a list of all commandline options.
+
+\fB\-v, \-\-version\fR
+.br 
+		Output the version info.
+
+\fB\-m, \-\-disable\-menu\fR
+.br 
+		Disable menu.
+.SH "FILES"
+.br 
+clarence.py
+.br 
+~/.clay/clarence
+.br 
+
+
+.SH "AUTHOR"
+Tomasz Maka
+.br 
+pasp@ll.pl

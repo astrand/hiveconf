@@ -1,0 +1,7 @@
+
+This directory contains a modified version of the Programmer's
+calculator "clarence". It uses the Hiveconf Python API, instead of
+reading and writing the configuration files on its own. 
+
+The included Hiveconf configuration file demonstrates how to use
+mandatory settings, user settings and system defaults.

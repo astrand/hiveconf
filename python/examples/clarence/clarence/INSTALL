@@ -1,0 +1,13 @@
+
+
+                   Installation steps:
+                   -------------------
+
+        1. Edit Makefile and make sure PREFIX variable
+           is valid for your system.
+        2. Type 'make install'
+        3. Type 'clarence.py'
+        4. If something went wrong read the FAQ
+        5. Enjoy or not
+
+

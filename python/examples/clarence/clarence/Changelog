@@ -1,0 +1,23 @@
+
+0.2.2 (29-04-2003)
+	* Config dir creation fix. (Thanks to Kristoffer Erlandsson)
+
+0.2.1 (23-03-2003)
+	* Added commandline '-m' option to disable menu, some minor
+	  gui changes. New bits() function and configurable binary 
+	  separators were added.
+
+0.2.0 (03-05-2002)
+	* Preferences dialog, new functions and gui improvements.
+
+0.1.10 (22-02-2002)
+	* Win32 fixes (Thanks to Frank Jacques), small changes,
+	  two new configuration options.
+
+0.1.9 (12-02-2002)
+	* Small gui changes, more configuration options, manual page,
+	  online functions list.
+
+0.1.8 (27-01-2002)
+	* First public release.
+

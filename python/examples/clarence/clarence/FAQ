@@ -1,0 +1,32 @@
+
+--------------------------------------------------------------------------------
+
+Q1: I'm trying to run Clarence but it fails with the following message:
+
+    Traceback (innermost last):
+      File "./clarence.py", line XXX, in ?
+        if __name__ == '__main__': main()
+      File "./clarence.py", line XXX, in main
+        gui["something"] = XXXXXX(config["something"])
+    KeyError: something
+
+
+A1: New version of Clarence has incompatible config file with older
+    versions. Just run terminal and type: rm ~/.clay/clarence
+
+--------------------------------------------------------------------------------
+
+Q2: I'm using both pygtk for gtk 1.2 and gtk 2.0. Will clarence work ?
+
+A2: Clarence was written using pygtk for gtk 1.2 series. To get clarence work
+    you have to uncomment lines cointaining:
+
+        import pygtk
+        pygtk.require('1.2')
+
+    somewhere at the top of clarence.py (lines 25 and 26).
+    After changes clarence should run and work without problems.
+
+--------------------------------------------------------------------------------
+
+

@@ -1,0 +1,21 @@
+
+# Mandatory settings
+%mount clarence.mandatory.hconf
+
+# User settings
+%mount ~/.clay/clarence.hconf
+
+#
+# Defaults
+#
+ascii_only=1
+fixed_font=fixed
+remember_expression=1
+binary_separators=3
+last_expression=
+
+[/window]
+width=400
+height=240
+placement=1
+
