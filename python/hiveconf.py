@@ -674,10 +674,10 @@ class HiveFileParser:
             # FIXME: Warn if no files found?
             for url_to_mount in glob.glob(mnturl):
                 # Add file: 
-                urls_to_mount.append(fixup_url(mnturl))
+                urls_to_mount.append(fixup_url(url_to_mount))
         else:
             urls_to_mount = [mnturl]
-            
+
         for mount_url in urls_to_mount:
             if format == "hive":
                 self.parse(mount_url, curfolder)
