@@ -646,13 +646,13 @@ class HiveFileParser:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
             return
 
-        format = "hive"
-        format_args = ""
+        backend = "hive"
+        backend_args = ""
         for o, a in opts:
             if o == "-t":
-                format = a
+                backend = a
             if o == "-a":
-                format_args = a
+                backend_args = a
 
         if not len(args) == 1:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
@@ -679,24 +679,29 @@ class HiveFileParser:
             urls_to_mount = [mnturl]
 
         for mount_url in urls_to_mount:
-            if format == "hive":
+            if backend == "hive":
                 self.parse(mount_url, curfolder)
 
-            elif format == "parameter": # FIXME: Separate function/module/library
+            elif backend == "filesystem": # FIXME: Separate function/module/library
                 paramname = "default" # FIXME
 
-                # Parse parameter specific options
-                for format_arg in format_args.split(","):
-                    (name, value) = format_arg.split("=")
+                # Parse specific options
+                for backend_arg in backend_args.split(","):
+                    try:
+                        (name, value) = backend_arg.split("=")
+                    except ValueError:
+                        continue
+                    
                     if name == "name":
                         paramname = value
 
-                paramvalue = open(mount_url).read()
+                paramvalue = urllib2.urlopen(mount_url).read()
                 curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
 
             else:
-                print >> sys.stderr, "%s: line %d: unsupported format" % (url, linenum)
+                print >> sys.stderr, "%s: line %d: unsupported backend" % (url, linenum)
                 continue
+
         
 
 class HiveFileUpdater:
