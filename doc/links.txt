@@ -7,6 +7,8 @@ Unsorted
 --------
 http://unixconfig.sourceforge.net/
 
+http://www.eastcoast.co.za/twylite/conf/confsystem.html
+
 http://util.openoffice.org/common/configuration/configuration_schema.html
 
 http://developer.gnome.org/doc/API/2.0/gconf/index.html
