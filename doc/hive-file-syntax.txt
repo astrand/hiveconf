@@ -41,7 +41,7 @@ ignored, as are lines containing only whitespace.
 Directives
 ----------
 
-%mount <URL>
+%mount [options] <URL>
 
     Mounts another hive. This basically works like an "include"
     directive, but handles writes as well. Hiveconf remembers which
@@ -51,3 +51,20 @@ Directives
     <URL> can be a simple, relative filename, like
     "../app.hive". Wildcard characters are allowed. 
 
+    The following options are supported:
+
+    -t <format> 
+      The argument following the -t is used to indicate the file
+      format. The file formats currently supported are:
+
+      hive: The hive file format (default)
+      value: A file containing a single parameter value. 
+
+    -o <options>
+      Generic mount options:
+
+        ro: Mount read-only
+        rw: Mount read-write
+
+    -a <options>
+      File format specific options. 
