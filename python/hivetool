@@ -53,11 +53,13 @@ def usage():
     print >>sys.stderr, """
 hivetool [options] [type:]parameter[=value] ...
 
-  -a,--all-entries      Print all parameters and values in a folder
-  -R,--recursive	When using -a, ascend folders recursively
-  -r,--root <file>	Specify root hive file. Default is /etc/root.hconf
-  -v,--version		Print version
-  -?,--help		Show this help message
+  -a,--all-entries        Print all parameters and values in a folder
+  -R,--recursive	  When using -a, ascend folders recursively
+  -r,--root <file>	  Specify root hive file. Default is /etc/root.hconf
+  -e,--eval VAR=parameter Print parameter value in format suitable for
+                          assignment to shell variable, via evaluation
+  -v,--version		  Print version
+  -?,--help		  Show this help message
 
   type is one of: string, bool, integer, float, binary, stringlist,
   boollist, integerlist, floatlist, binarylist. Default is string
@@ -73,8 +75,9 @@ hivetool [options] [type:]parameter[=value] ...
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "a:Rr:v?",
-                                   ["all-entries=", "recursive", "root=", "version", "help"])
+        opts, args = getopt.getopt(sys.argv[1:], "a:Rr:ve:?",
+                                   ["all-entries=", "recursive", "root=", "version", "help",
+                                    "eval"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -82,6 +85,7 @@ def main():
     roothive = DEFAULT_ROOT_HIVE
     walk_folders = []
     recursive = 0
+    e_params =[]
     for o, a in opts:
         if o in ("-a", "--all-entries"):
             walk_folders.append(a)
@@ -92,12 +96,29 @@ def main():
         if o in ("-v", "--version"):
             print >> sys.stderr, "hivetool version", VERSION
             sys.exit(0)
+        if o in ("-e", "--eval"):
+            words = a.split("=", 1)
+            if not words[1:]:
+                usage()
+                sys.exit(2)
+            e_params.append(words)
+            
         if o in ("-?", "--help"):
             usage()
             sys.exit(0)
 
     # Try to open root hive
     hive = hiveconf.open_hive(roothive)
+
+    # Handle -e parameters
+    for (varname, param) in e_params:
+        (paramtype, parampath) = get_type(param)
+        method = getattr(hive, "get_%s" % paramtype)
+        value = method(parampath)
+        if value:
+            print '%s="%s"' % (varname, value)
+        else:
+            print '%s=""' % varname
 
     # Get/set listed parameters
     for param in args:
