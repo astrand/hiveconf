@@ -88,7 +88,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "a:Rr:ve:?",
                                    ["all-entries=", "recursive", "root=", "version", "help",
-                                    "eval"])
+                                    "eval="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
