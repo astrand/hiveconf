@@ -347,44 +347,44 @@ class Folder(NamespaceObject):
     #
     def _get_value(self, parampath, default, method):
         param = self.lookup(parampath)
-        # Check if param really is a Parameter
-        if not isinstance(param, Parameter):
-            raise NotAParameterError()
-        
+
         if not param:
             return default
         else:
+            # Check if param really is a Parameter
+            if not isinstance(param, Parameter):
+                raise NotAParameterError()
             return method(param)
 
     def get_string(self, parampath, default=None):
         return self._get_value(parampath, default, Parameter.get_string)
 
-    def get_bool(self, parampath):
-        return self._get_value(parampath, Parameter.get_bool)
+    def get_bool(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_bool)
 
-    def get_integer(self, parampath):
-        return self._get_value(parampath, Parameter.get_integer)
+    def get_integer(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_integer)
 
-    def get_float(self, parampath):
-        return self._get_value(parampath, Parameter.get_float)
+    def get_float(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_float)
 
-    def get_binary(self, parampath):
-        return self._get_value(parampath, Parameter.get_binary)
+    def get_binary(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_binary)
 
-    def get_string_list(self, parampath):
-        return self._get_value(parampath, Parameter.get_string_list)
+    def get_string_list(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_string_list)
 
-    def get_bool_list(self, parampath):
-        return self._get_value(parampath, Parameter.get_bool_list)
+    def get_bool_list(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_bool_list)
 
-    def get_integer_list(self, parampath):
-        return self._get_value(parampath, Parameter.get_integer_list)
+    def get_integer_list(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_integer_list)
 
-    def get_float_list(self, parampath):
-        return self._get_value(parampath, Parameter.get_float_list)
+    def get_float_list(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_float_list)
     
-    def get_binary_list(self, parampath):
-        return self._get_value(parampath, Parameter.get_binary_list)
+    def get_binary_list(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_binary_list)
     
     #
     # Set methods
