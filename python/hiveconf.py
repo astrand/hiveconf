@@ -384,6 +384,7 @@ def mount_directive(args, curfolder, url, linenum):
         print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
         return
 
+    # FIXME: Only glob for file URLs. 
     for mount_url in glob.glob(args[0]):
         open_hive(mount_url, curfolder) 
         
