@@ -26,6 +26,7 @@ import sys
 import urllib2
 import urlparse
 import os
+import string
 
 class DebugWriter:
     def __init__(self, debug):
@@ -108,7 +109,7 @@ class Parameter(NamespaceObject):
         self.paramname = paramname
 
     #
-    # Primitive data types
+    # Primitive data types, get operations
     #
     def get_string(self):
         """Get value as string"""
@@ -142,13 +143,29 @@ class Parameter(NamespaceObject):
         except ValueError:
             raise BadBinaryFormat()
 
+    #
+    # Primitive data types, set operations
+    #
     def set_string(self, new_value):
         """Set string value"""
         pu = ParamUpdater(self.source, self.sectionname, self.paramname)
         pu.update(new_value)
 
+    def set_bool(self, new_value):
+        """Set bool value"""
+        self.set_string(self._bool2string(new_value))
+
+    def set_integer(self, new_value):
+        self.set_string(str(new_value))
+
+    def set_float(self, new_value):
+        self.set_string(str(new_value))
+
+    def set_binary(self, new_value):
+        self.set_string(self._string2hexascii(new_value))
+
     #
-    # Compound data types
+    # Compound data types, get operations
     #
     def get_string_list(self):
         return self.value.split()
@@ -164,13 +181,38 @@ class Parameter(NamespaceObject):
 
     def get_binary_list(self):
         return map(self._hexascii2string, self.value.split())
+
+    #
+    # Compound data types, set operations
+    #
+    def set_string_list(self, new_value):
+        self.set_string(string.join(new_value))
+    
+    def set_bool_list(self, new_value):
+        self.set_string_list(map(self._bool2string, new_value))
+
+    def set_integer_list(self, new_value):
+        self.set_string_list(map(str, new_value))
+
+    def set_float_list(self, new_value):
+        self.set_string_list(map(str, new_value))
+
+    def set_binary_list(self, new_value):
+        self.set_string_list(map(self._string2hexascii, new_value))
+
+    #
+    # Internal methods
+    #
+    def _bool2string(self, value):
+        """Convert a Python bool value to 'true' or 'false'"""
+        return value and "true" or "false"
         
     def _string2hexascii(self, s):
         """Convert string to hexascii"""
         result = ""
         for char in s:
             result += "%02x" % ord(char)
-            return result
+        return result
 
     def _hexascii2string(self, s):
         """Convert hexascii to string"""
