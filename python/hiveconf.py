@@ -250,15 +250,12 @@ class Folder(NamespaceObject):
             indent = IndentPrinter()
 
         # Print Parameters and values
-        print >>indent, "Parameters:"
         for (paramname, param) in self.parameters.items():
-            indent.change(4)
             print >> indent, paramname, "=", param.get_string()
-            indent.change(-4)
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
-            print >>indent, "Folder:", foldername
+            print >>indent, foldername + "/"
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
