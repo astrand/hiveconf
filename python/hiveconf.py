@@ -244,7 +244,7 @@ class Parameter(NamespaceObject):
 
 class Folder(NamespaceObject):
     """A folder. Does not contain the name of the folder itself."""
-    def __init__(self, source, write_target):
+    def __init__(self, source, write_target, prefix):
         self.folders = {}
         self.parameters = {}
         # When adding new objects, we need to write them to some file.
@@ -264,9 +264,11 @@ class Folder(NamespaceObject):
 
         # List of URLs that has contributed to this Folder.
         self.sources = []
+        # URL to write to when adding new folder objects. 
         self.write_target = write_target
-
-        self.update(source)
+        # Mount prefix for this folder, in write_target. 
+        self.prefix = prefix
+        self._update(source)
 
     def _update(self, source):
         if source:
@@ -305,20 +307,44 @@ class Folder(NamespaceObject):
     def _exists(self, objname):
         return self.folders.has_key(objname) or self.parameters.has_key(objname)
 
-    # FIXME: Remove?
+    #
+    # Get methods
+    #
+
     def get_string(self, objpath):
         return self.lookup(objpath).get_string()
 
-    # FIXME: Correct place?
-    def set_string(self, objpath, new_value):
-        comps = path2comps(objpath)
-        folder = self._lookup_list(comps[:-1], autocreate=1)
+    # FIXME: The rest
+
+    #
+    # Set methods
+    #
+    
+    # FIXME
+    def set_string(self, parampath, new_value):
+        comps = path2comps(parampath)
+        folder = self._lookup_list(comps[:-1]) # FIXME: autocreate
         paramname = comps[-1]
         param = folder.lookup(paramname)
         if not param:
             # Add new parameter
-            # FIXME
-            folder._addobject(Parameter(new_value, "", "", paramname), paramname)
+            # Write new params to the file specified by the Folders
+            # write_target
+            source = folder.write_target
+
+            # Sectionname
+            prefix_comps = path2comps(folder.prefix)
+            parampath_comps = comps[:-1]
+
+            if not prefix_comps == parampath_comps[:len(prefix_comps)]:
+                # folder prexis is not a prefix for parampath.
+                # Something is wrong!
+                raise "Internal error"
+
+            sectionname = comps2path(parampath_comps[len(prefix_comps):])
+
+            folder._addobject(Parameter(new_value, source,
+                                        sectionname, paramname), paramname)
         else:
             # Update existing parameter
             param.set_string(new_value)
@@ -359,11 +385,11 @@ class Folder(NamespaceObject):
 
         # Print Parameters and values
         for (paramname, param) in self.parameters.items():
-            print >> indent, paramname, "=", param.get_string()
+            print >> indent, paramname, "=", param.get_string(), " (sectionname:%s)" % param.sectionname
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
-            print >>indent, foldername + "/ (sources:%s, write_target:%s)" % (folder.sources, folder.write_target)
+            print >>indent, foldername + "/ (sources:%s, write_target:%s, prefix:%s)" % (folder.sources, folder.write_target, folder.prefix)
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
@@ -378,13 +404,13 @@ def fixup_url(url):
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
 
-def open_hive(url, rootfolder=None):
+def open_hive(url, rootfolder=None, prefix="/"):
     """Open and parse a hive file. Returns a folder"""
     url = fixup_url(url)
     file = urllib2.urlopen(url)
 
     if not rootfolder:
-        rootfolder = Folder(url, url)
+        rootfolder = Folder(url, url, prefix)
     curfolder = rootfolder
     linenum = 0
     sectionname = ""
@@ -409,7 +435,7 @@ def open_hive(url, rootfolder=None):
 
             sectionname = line[1:-1]
             print >>debugw, "Read section line", sectionname
-            curfolder = handle_section(rootfolder, sectionname, url)
+            curfolder = handle_section(rootfolder, sectionname, url, prefix)
             
         elif line.startswith("%"):
             # Directive
@@ -419,7 +445,7 @@ def open_hive(url, rootfolder=None):
 
             # %mount
             if directive == "%mount":
-                mount_directive(args, curfolder, url, linenum)
+                mount_directive(args, curfolder, url, linenum, prefix, sectionname)
             else:
                 print >> sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
             
@@ -436,7 +462,7 @@ def open_hive(url, rootfolder=None):
     return rootfolder
 
 
-def handle_section(rootfolder, sectionname, source):
+def handle_section(rootfolder, sectionname, source, prefix):
     print >>debugw, "handle_section for section", sectionname
     comps = path2comps(sectionname)
 
@@ -445,14 +471,14 @@ def handle_section(rootfolder, sectionname, source):
         # Folder already exists. Update with new information. 
         folder._update(source)
     else:
-        folder = _create_folders(rootfolder, comps, source)
+        folder = _create_folders(rootfolder, comps, source, prefix)
 
     return folder
 
 
 # Create folder in memory. Not for external use.
 # The external function should also write folder to disk. 
-def _create_folders(folder, comps, source):
+def _create_folders(folder, comps, source, prefix):
     first_comp = comps[0]
     rest_comps = comps[1:] 
 
@@ -467,9 +493,9 @@ def _create_folders(folder, comps, source):
             else:
                 write_target = source
             
-            obj = Folder(source, write_target)
+            obj = Folder(source, write_target, prefix)
         else:
-            obj = Folder(None, folder.write_target)
+            obj = Folder(None, folder.write_target, prefix)
 
         folder._addobject(obj, first_comp)
 
@@ -481,10 +507,10 @@ def _create_folders(folder, comps, source):
         if not isinstance(obj, Folder):
             raise ObjectExistsError
 
-        return _create_folders(obj, rest_comps, source)
+        return _create_folders(obj, rest_comps, source, prefix)
 
 
-def mount_directive(args, curfolder, url, linenum):
+def mount_directive(args, curfolder, url, linenum, prefix, sectionname):
     try:
         opts, args = getopt.getopt(args, "t:a:")
     except getopt.GetoptError:
@@ -506,7 +532,7 @@ def mount_directive(args, curfolder, url, linenum):
     # FIXME: Only glob for file URLs. 
     for mount_url in glob.glob(args[0]):
         if format == "hive":
-            open_hive(mount_url, curfolder)
+            open_hive(mount_url, curfolder, os.path.join(prefix, sectionname))
             
         elif format == "parameter": # FIXME: Separate function/module/library
             paramname = "default" # FIXME
