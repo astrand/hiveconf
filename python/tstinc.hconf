@@ -1,4 +1,7 @@
  
-[bar]
-p1=v1
+# One additional parameter in /folder1
+flavor=vanilla
  
+# A new subfolder below /folder1
+[/folder2]
+secret=pear

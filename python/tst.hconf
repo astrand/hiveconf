@@ -1,50 +1,29 @@
 #
-# Test Hive, based on Sambas smb.conf
+# Test Hive
 #
 
 
-
-
 # Toplevel parameter
-toplevel_param1=fff
+toplevel_param1=toplevel_value1
 
 # Whitespace below and above
 
 # First level folder
-[globals] 
-# String
-workgroup = MYWORKGROUP
-# Integer, parameter name with spaces
-max log size=222
-# Float value
-deadtime=12.3
-# Binary data ("GNU University")
-server string=474e55
-# List of bools
-boolean_list=true true true false
-# List of integers
-integer_list=1 2 3 0
-# List of floats
-float_list=1.2 2.3
-# List of strings
-interfaces=a b
-# List of binary data
-hostkeys=616161 626262
+[/folder1] 
+string_param=stringvalue1
+bool_param=true
+integer_param=123
+float_param=3.14
+binary_param=62696e737472696e67
 
+string_list=apples bananas
+bool_list=true false true
+integer_list=2 3 5 7 9 11
+float_list=3.14 6.28
+binary_list=62696e737472696e67 62696e737472696e67
 
-[foo] 
 %mount tstinc.hconf
 
-
-#%mount -t hive /tmp/hive.d/* 
-
-#%mount -t parameter -a name=smak /tmp/smak
-
-
-
-[/apple/vanilj/choklad]
-iilist=1 2 3 4
-storlek=true
-
-[/smak]
-%mount -t filesystem -a name=vvvvvv foo.param
+# Another parameter at the top level
+[/]
+toplevel_param2=toplevel_value2
