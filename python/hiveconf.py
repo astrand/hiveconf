@@ -108,6 +108,13 @@ def fixup_url(url):
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
+def get_url_scheme(url):
+    return urlparse.urlsplit(url)[0]
+
+def get_url_file(url):
+    """For URLs with file scheme, get path component"""
+    return urlparse.urlsplit(url)[2]
+
 def fixup_sectionname(sn):
     """Add leading slash, remove trailing slash, if necessary"""
     if not sn.startswith("/"):
@@ -639,9 +646,28 @@ class HiveFileParser:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
             return
 
-        # FIXME: Only glob for file URLs.
-        # FIXME: Warn if no file if found?
-        for mount_url in glob.glob(args[0]):
+        mnturl = args[0]
+        del args
+
+        if get_url_scheme(url) == "file":
+            # Strip file:
+            mnturl = get_url_file(mnturl)
+            # Get source file directory
+            src_base_dir = os.path.dirname(get_url_file(url))
+            # Construct new path, relative to source dir
+            mnturl = os.path.join(src_base_dir, mnturl)
+            
+            # Glob local files
+            urls_to_mount =[]
+            # FIXME: Warn if no files found?
+            for url_to_mount in glob.glob(mnturl):
+                # Add file: 
+                urls_to_mount.append(fixup_url(mnturl))
+
+        else:
+            urls_to_mount = glob.glob(mnturl)
+            
+        for mount_url in urls_to_mount:
             if format == "hive":
                 self.parse(mount_url, curfolder)
 
