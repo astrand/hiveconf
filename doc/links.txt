@@ -1,4 +1,12 @@
 
+How to fix the Unix configuration nightmare, by Matthew Arnison:
+http://www.cat.org.au/maffew/cat/unix-config.html
+
+
+Unsorted
+--------
+http://unixconfig.sourceforge.net/
+
 http://util.openoffice.org/common/configuration/configuration_schema.html
 
 http://developer.gnome.org/doc/API/2.0/gconf/index.html
