@@ -1,3 +1,6 @@
 old
 TODO
 *.pyc
+MANIFEST
+build
+dist
