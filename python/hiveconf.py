@@ -226,7 +226,6 @@ class Parameter(NamespaceObject):
             pair = s[x*2:x*2+2]
             val = int(pair, 16)
             result += chr(val)
-            
         return result
 
     def _string2bool(self, s):
@@ -241,7 +240,6 @@ class Parameter(NamespaceObject):
             return 0
         else:
             raise ValueError()
-        
             
 
 class Folder(NamespaceObject):
