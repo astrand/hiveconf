@@ -285,6 +285,10 @@ class Folder(NamespaceObject):
         if source:
             self.sources.append(source)
 
+    def _write_section(self):
+        hfu = HiveFileUpdater(self.write_target)
+        hfu.add_section(self.sectionname)
+
     def _addobject(self, obj, objname):
         if self._exists(objname):
             raise ObjectExistsError
@@ -334,7 +338,7 @@ class Folder(NamespaceObject):
     # FIXME
     def set_string(self, parampath, new_value):
         comps = path2comps(parampath)
-        folder = self._lookup_list(comps[:-1]) # FIXME: autocreate
+        folder = self._lookup_list(comps[:-1], autocreate=1) 
         paramname = comps[-1]
         param = folder.lookup(paramname)
         if not param:
@@ -354,35 +358,54 @@ class Folder(NamespaceObject):
             # Update existing parameter
             param.set_string(new_value)
 
-    def lookup(self, objpath):
+    def lookup(self, objpath, autocreate=0):
         """Lookup an object. objname is like global/settings/background
-        Returns None if object is not found."""
+        Returns None if object is not found.
+        """
         comps = path2comps(objpath)
-        return self._lookup_list(comps)
+        return self._lookup_list(comps, autocreate)
 
-    def _lookup_list(self, comps):
+    def _lookup_list(self, comps, autocreate=0, sectionname=""):
         """Lookup an object. comps is like
         ["global", "settings", "background"]
-        Returns None if object is not found. 
+        Returns None if object is not found.
+
+        If autocreate is in use, leading paths will be created in memory.
+        The last component will be recognized as a Folder, and it will be
+        created and written to disk. 
         """
         print >>debugw, "_lookup_list with components:", repr(comps)
         
-        first_comp = comps[0]
-        rest_comps = comps[1:] 
+        obj_name = comps[0]
+        rest_comps = comps[1:]
+        sectionname = os.path.join(sectionname, obj_name)
         
-        obj = self._get_object(first_comp)
+        obj = self._get_object(obj_name)
+
+        create_folder = not obj and autocreate
+        if create_folder:
+            obj = Folder(None, self.write_target,
+                         os.path.join(self.sectionname, obj_name))
+            self._addobject(obj, obj_name)
+
         if not obj:
             return
 
         if len(comps) == 1:
             # Last step in recursion
+            if create_folder:
+                # Last component, sync to disk
+                obj._write_section()
+                # Set source
+                obj._update(obj.write_target)
+            
             return obj
         else:
             # Recursive call with rest of component list
             if not isinstance(obj, Folder):
                 raise ObjectExistsError
             
-            return obj._lookup_list(rest_comps)
+            return obj._lookup_list(rest_comps, autocreate, sectionname)
 
     def walk(self, indent=None):
         if not indent:
@@ -488,11 +511,11 @@ class HiveFileParser:
     # Create folder in memory. Not for external use.
     # The external function should also write folder to disk. 
     def _create_folders(self, folder, comps, source, sectionname=""):
-        first_comp = comps[0]
+        obj_name = comps[0]
         rest_comps = comps[1:]
-        sectionname = os.path.join(sectionname, comps[0])
+        sectionname = os.path.join(sectionname, obj_name)
 
-        obj = folder._get_object(first_comp)
+        obj = folder._get_object(obj_name)
         if not obj:
             # Create folder
             if len(comps) == 1:
@@ -507,7 +530,7 @@ class HiveFileParser:
             else:
                 obj = Folder(None, folder.write_target, sectionname)
 
-            folder._addobject(obj, first_comp)
+            folder._addobject(obj, obj_name)
 
         if len(comps) == 1:
             # Last step in recursion
@@ -629,5 +652,6 @@ class HiveFileUpdater:
     def add_section(self, sectionname):
         """Add new section to end of file"""
         f = open(self.filename, "a")
+        print >> f
         print >> f, "[%s]" % sectionname
 
