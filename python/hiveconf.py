@@ -410,151 +410,166 @@ def fixup_url(url):
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
 
-def open_hive(url, rootfolder=None, prefix="/"):
-    """Open and parse a hive file. Returns a folder"""
-    url = fixup_url(url)
-    file = urllib2.urlopen(url)
 
-    if not rootfolder:
-        rootfolder = Folder(url, url, prefix)
-    curfolder = rootfolder
-    linenum = 0
-    sectionname = ""
 
-    # Read & parse entire hive file
-    while 1:
-        line = file.readline()
-        linenum += 1
+def open_hive(url):
+    hfp = HiveFileParser(url)
+    return hfp.parse()
 
-        if not line:
-            break
 
-        line = line.strip()
+class HiveFileParser:
+    def __init__(self, url):
+        # URL to entry hive
+        self.url = url
+
+    def parse(self, url=None, rootfolder=None, prefix="/"):
+        """Open and parse a hive file. Returns a folder"""
+        if not url:
+            url = self.url
         
-        if line.startswith("#") or line.startswith(";") or not line:
-            continue
+        url = fixup_url(url)
+        file = urllib2.urlopen(url)
 
-        if line.startswith("["):
-            # Folder
-            if not line.endswith("]"):
-                raise SyntaxError
+        if not rootfolder:
+            rootfolder = Folder(url, url, prefix)
+        curfolder = rootfolder
+        linenum = 0
+        sectionname = ""
 
-            sectionname = line[1:-1]
-            print >>debugw, "Read section line", sectionname
-            curfolder = handle_section(rootfolder, sectionname, url, prefix)
-            
-        elif line.startswith("%"):
-            # Directive
-            fields = line.split()
-            directive = fields[0]
-            args = fields[1:]
+        # Read & parse entire hive file
+        while 1:
+            line = file.readline()
+            linenum += 1
 
-            # %mount
-            if directive == "%mount":
-                mount_directive(args, curfolder, url, linenum, prefix, sectionname)
+            if not line:
+                break
+
+            line = line.strip()
+
+            if line.startswith("#") or line.startswith(";") or not line:
+                continue
+
+            if line.startswith("["):
+                # Folder
+                if not line.endswith("]"):
+                    raise SyntaxError
+
+                sectionname = line[1:-1]
+                print >>debugw, "Read section line", sectionname
+                curfolder = self.handle_section(rootfolder, sectionname, url, prefix)
+
+            elif line.startswith("%"):
+                # Directive
+                fields = line.split()
+                directive = fields[0]
+                args = fields[1:]
+
+                # %mount
+                if directive == "%mount":
+                    self.mount_directive(args, curfolder, url, linenum, prefix, sectionname)
+                else:
+                    print >> sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
+
+            elif line.find("=") != -1:
+                # Parameter
+                (paramname, paramvalue) = line.split("=", 1)
+                paramname = paramname.strip()
+                paramvalue = paramvalue.strip()
+                print >>debugw, "Read parameter line", paramname
+                curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
             else:
-                print >> sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
-            
-        elif line.find("=") != -1:
-            # Parameter
-            (paramname, paramvalue) = line.split("=", 1)
-            paramname = paramname.strip()
-            paramvalue = paramvalue.strip()
-            print >>debugw, "Read parameter line", paramname
-            curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
+                raise SyntaxError(linenum)
+
+        return rootfolder
+
+
+    def handle_section(self, rootfolder, sectionname, source, prefix):
+        print >>debugw, "handle_section for section", sectionname
+        comps = path2comps(sectionname)
+
+        folder = rootfolder._lookup_list(comps)
+        if folder:
+            # Folder already exists. Update with new information. 
+            folder._update(source)
         else:
-            raise SyntaxError(linenum)
+            folder = self._create_folders(rootfolder, comps, source, prefix)
 
-    return rootfolder
-
-
-def handle_section(rootfolder, sectionname, source, prefix):
-    print >>debugw, "handle_section for section", sectionname
-    comps = path2comps(sectionname)
-
-    folder = rootfolder._lookup_list(comps)
-    if folder:
-        # Folder already exists. Update with new information. 
-        folder._update(source)
-    else:
-        folder = _create_folders(rootfolder, comps, source, prefix)
-
-    return folder
+        return folder
 
 
-# Create folder in memory. Not for external use.
-# The external function should also write folder to disk. 
-def _create_folders(folder, comps, source, prefix):
-    first_comp = comps[0]
-    rest_comps = comps[1:] 
+    # Create folder in memory. Not for external use.
+    # The external function should also write folder to disk. 
+    def _create_folders(self, folder, comps, source, prefix):
+        first_comp = comps[0]
+        rest_comps = comps[1:] 
 
-    obj = folder._get_object(first_comp)
-    if not obj:
-        # Create folder
+        obj = folder._get_object(first_comp)
+        if not obj:
+            # Create folder
+            if len(comps) == 1:
+                # last step
+                if not source:
+                    # If no source, inherit
+                    write_target = folder.write_target
+                else:
+                    write_target = source
+
+                obj = Folder(source, write_target, prefix)
+            else:
+                obj = Folder(None, folder.write_target, prefix)
+
+            folder._addobject(obj, first_comp)
+
         if len(comps) == 1:
-            # last step
-            if not source:
-                # If no source, inherit
-                write_target = folder.write_target
+            # Last step in recursion
+            return obj
+        else:
+            # Recursive call with rest of component list
+            if not isinstance(obj, Folder):
+                raise ObjectExistsError
+
+            return self._create_folders(obj, rest_comps, source, prefix)
+
+
+    def mount_directive(self, args, curfolder, url, linenum, prefix, sectionname):
+        try:
+            opts, args = getopt.getopt(args, "t:a:")
+        except getopt.GetoptError:
+            print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
+            return
+
+        format = "hive"
+        format_args = ""
+        for o, a in opts:
+            if o == "-t":
+                format = a
+            if o == "-a":
+                format_args = a
+
+        if not len(args) == 1:
+            print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
+            return
+
+        # FIXME: Only glob for file URLs. 
+        for mount_url in glob.glob(args[0]):
+            if format == "hive":
+                self.parse(mount_url, curfolder, os.path.join(prefix, sectionname))
+
+            elif format == "parameter": # FIXME: Separate function/module/library
+                paramname = "default" # FIXME
+
+                # Parse parameter specific options
+                for format_arg in format_args.split(","):
+                    (name, value) = format_arg.split("=")
+                    if name == "name":
+                        paramname = value
+
+                paramvalue = open(mount_url).read()
+                curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
+
             else:
-                write_target = source
-            
-            obj = Folder(source, write_target, prefix)
-        else:
-            obj = Folder(None, folder.write_target, prefix)
-
-        folder._addobject(obj, first_comp)
-
-    if len(comps) == 1:
-        # Last step in recursion
-        return obj
-    else:
-        # Recursive call with rest of component list
-        if not isinstance(obj, Folder):
-            raise ObjectExistsError
-
-        return _create_folders(obj, rest_comps, source, prefix)
-
-
-def mount_directive(args, curfolder, url, linenum, prefix, sectionname):
-    try:
-        opts, args = getopt.getopt(args, "t:a:")
-    except getopt.GetoptError:
-        print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
-        return
-
-    format = "hive"
-    format_args = ""
-    for o, a in opts:
-        if o == "-t":
-            format = a
-        if o == "-a":
-            format_args = a
-    
-    if not len(args) == 1:
-        print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
-        return
-
-    # FIXME: Only glob for file URLs. 
-    for mount_url in glob.glob(args[0]):
-        if format == "hive":
-            open_hive(mount_url, curfolder, os.path.join(prefix, sectionname))
-            
-        elif format == "parameter": # FIXME: Separate function/module/library
-            paramname = "default" # FIXME
-
-            # Parse parameter specific options
-            for format_arg in format_args.split(","):
-                (name, value) = format_arg.split("=")
-                if name == "name":
-                    paramname = value
-
-            paramvalue = open(mount_url).read()
-            curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
-            
-        else:
-            print >> sys.stderr, "%s: line %d: unsupported format" % (url, linenum)
-            continue
+                print >> sys.stderr, "%s: line %d: unsupported format" % (url, linenum)
+                continue
         
 
 class HiveFileUpdater:
