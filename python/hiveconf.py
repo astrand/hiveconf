@@ -194,7 +194,7 @@ def open_hive(filename):
 
         line = line.strip()
         
-        if line.startswith("#") or not line:
+        if line.startswith("#") or line.startswith(";") or not line:
             continue
 
         if line.startswith("["):
