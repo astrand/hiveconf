@@ -153,8 +153,8 @@ class Parameter(NamespaceObject):
     #
     def set_string(self, new_value):
         """Set string value"""
-        pu = ParamUpdater(self.source, self.sectionname, self.paramname)
-        pu.update(new_value)
+        u = HiveFileUpdater(self.source)
+        u.change_parameter(self.sectionname, self.paramname, new_value)
 
     def set_bool(self, new_value):
         """Set bool value"""
@@ -557,19 +557,18 @@ def mount_directive(args, curfolder, url, linenum, prefix, sectionname):
             continue
         
 
-class ParamUpdater:
+class HiveFileUpdater:
     # FIXME: Broken for parameter files. 
-    def __init__(self, source, sectionname, paramname):
+    def __init__(self, source):
         self.source = source
-        self.sectionname = sectionname
-        self.paramname = paramname
 
         (scheme, netloc, self.filename, query, fragment) = urlparse.urlsplit(self.source)
         if not scheme == "file":
             # Only able to write to local files right now
             raise ReadOnlySource()
 
-    def update(self, new_value):
+    def change_parameter(self, sectionname, paramname, new_value):
+        """Change existing parameter line in file"""
         # FIXME: Use file locking
         f = open(self.filename, "r+")
 
@@ -579,7 +578,7 @@ class ParamUpdater:
 
         # If this parameter is at top level, we are already in the
         # correct section when we start parsing. 
-        if self.sectionname == "":
+        if sectionname == "":
             correct_section = 1
 
         while 1:
@@ -600,13 +599,12 @@ class ParamUpdater:
                     # Ignore invalid section lines
                     continue
 
-                correct_section = (self.sectionname == line[1:-1])
+                correct_section = (sectionname == line[1:-1])
                 
             elif correct_section and line.find("=") != -1:
-                (paramname, paramvalue) = line.split("=", 1)
-                paramname = paramname.strip()
-                paramvalue = paramvalue.strip()
-                if self.paramname == paramname:
+                (line_paramname, line_paramvalue) = line.split("=", 1)
+                line_paramname = line_paramname.strip()
+                if paramname == line_paramname:
                     parameter_offset = line_offset
                     rest_data = f.read()
                     break
@@ -617,7 +615,7 @@ class ParamUpdater:
 
         # Seek to parameter offset, and write new value
         f.seek(parameter_offset)
-        print >> f, self.paramname + "=" + new_value
+        print >> f, paramname + "=" + new_value
 
         # Write rest
         f.write(rest_data)
