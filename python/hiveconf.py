@@ -152,12 +152,12 @@ class Parameter(NamespaceObject):
 
     def _be_add_param(self):
         """Add a new parameter to the backend"""
-        hfu = HiveFileUpdater(self.source)
+        hfu = _HiveFileUpdater(self.source)
         hfu.add_parameter(self.sectionname, self.paramname, self._value)
 
     def _be_change_param(self):
         """Change the value of a existing parameter in the backend"""
-        hfu = HiveFileUpdater(self.source)
+        hfu = _HiveFileUpdater(self.source)
         hfu.change_parameter(self.sectionname, self.paramname, self._value)
 
     #
@@ -319,7 +319,7 @@ class Folder(NamespaceObject):
             self.sources.append(source)
 
     def _be_write_section(self):
-        hfu = HiveFileUpdater(self.write_target)
+        hfu = _HiveFileUpdater(self.write_target)
         hfu.add_section(self.sectionname)
 
     def _addobject(self, obj, objname):
@@ -513,11 +513,11 @@ class Folder(NamespaceObject):
 
 
 def open_hive(url):
-    hfp = HiveFileParser(url)
+    hfp = _HiveFileParser(url)
     return hfp.parse()
 
 
-class HiveFileParser:
+class _HiveFileParser:
     def __init__(self, url):
         # URL to entry hive
         self.url = url
@@ -705,7 +705,7 @@ class HiveFileParser:
 
         
 
-class HiveFileUpdater:
+class _HiveFileUpdater:
     # FIXME: Broken for parameter files. 
     def __init__(self, source):
         self.source = source
