@@ -273,7 +273,7 @@ class Folder(NamespaceObject):
             self.sources.append(source)
 
     def _addobject(self, obj, objname):
-        if self.exists(objname):
+        if self._exists(objname):
             raise ObjectExistsError
 
         if isinstance(obj, Parameter):
@@ -302,7 +302,7 @@ class Folder(NamespaceObject):
     def _get_object(self, objname):
         return self.folders.get(objname) or self.parameters.get(objname)
         
-    def exists(self, objname):
+    def _exists(self, objname):
         return self.folders.has_key(objname) or self.parameters.has_key(objname)
 
     # FIXME: Remove?
