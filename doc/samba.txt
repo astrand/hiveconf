@@ -1,0 +1,33 @@
+
+Hiveconf and Samba
+==================
+
+The Samba package (http://www.samba.org) is used throughout Hiveconf
+as an example application. The reasons for this is:
+
+1) It is a wide-spread and stable package
+
+2) It includes both system services running as root (smbd and nmbd),
+   and user tools like smbclient, nmblookup etc.
+
+3) The configuration file smb.conf is compatible with the Hive file
+   syntax. 
+
+
+Even though Samba does not use the Hiveconf library (we need to write
+a implementation in C first), "hivetool" can be useful as a
+configuration tool. Here are some examples:
+
+* List the current workgroup:
+
+  hivetool /services/samba/workgroup
+
+
+* Set workgroup:
+
+  hivetool /services/samba/workgroup=SALES
+
+
+* List all Samba parameters:
+
+  hivetool -Ra /services/samba
