@@ -6,15 +6,15 @@ import getopt
 import sys
 
 VERSION="0.0"
-DEFAULTTYPE="string"
-
+DEFAULT_TYPE="string"
+DEFAULT_ROOT_HIVE="/etc/root.hive"
 
 def get_type(s):
     """Parse parameter string. Returns (type, parameter)"""
     words = s.split(":", 1)
     if not words[1:]:
         # No colon in string
-        return (DEFAULTTYPE, s)
+        return (DEFAULT_TYPE, s)
     
     (beforecolon, aftercolon) = words
     if beforecolon in ("string", "bool", "integer", "float", "binary",
@@ -22,7 +22,7 @@ def get_type(s):
                        "float_list", "binary_list"):
         return (beforecolon, aftercolon)
     else:
-        return (DEFAULTTYPE, s)
+        return (DEFAULT_TYPE, s)
 
 
 def get_value(s):
@@ -77,7 +77,7 @@ def main():
         usage()
         sys.exit(2)
 
-    roothive = "/etc/hive.root"
+    roothive = DEFAULT_ROOT_HIVE
     walk_folders = []
     recursive = 0
     for o, a in opts:
