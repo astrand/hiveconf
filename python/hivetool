@@ -64,6 +64,8 @@ hivetool [options] [type:]parameter[=value] ...
 
   Example:
 
+  hivetool -Ra /
+
   hivetool -r /etc/samba/smb.conf /global/workgroup=MYWORKGROUP
 """
 
