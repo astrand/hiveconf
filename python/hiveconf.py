@@ -656,10 +656,10 @@ class _HiveFileParser:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
             return
 
-        mnturl = args[0]
+        mnturl = _fixup_url(args[0])
         del args
 
-        if _get_url_scheme(url) == "file":
+        if _get_url_scheme(mnturl) == "file":
             # Strip file:
             mnturl = _get_url_file(mnturl)
             # Get source file directory
