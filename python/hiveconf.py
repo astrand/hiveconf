@@ -340,7 +340,6 @@ class Folder(NamespaceObject):
             if autocreate:
                 # Create folder
                 if len(comps) == 1:
-                    print "last component"
                     obj = Folder(source, source)
                 else:
                     obj = Folder(None, self.write_target)
