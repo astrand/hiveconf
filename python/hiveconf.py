@@ -48,9 +48,9 @@ class IndentPrinter:
 
     def write(self, data):
         if self.indent and not self.line_indented:
-            sys.stderr.write(" " * self.indent)
+            sys.stdout.write(" " * self.indent)
             self.line_indented = 1
-        sys.stderr.write(data)
+        sys.stdout.write(data)
         if data.find("\n") != -1:
             self.line_indented = 0
 
