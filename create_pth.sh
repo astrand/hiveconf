@@ -1,3 +1,4 @@
+#!/bin/sh
 
 for binary in python2 python2.0 python2.1 python2.2 python2.3; do
     if $binary -c "" &>/dev/null; then
