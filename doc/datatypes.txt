@@ -5,6 +5,8 @@ Supported data types in HiveConf
 Primitive data types
 --------------------
 
+* Strings
+
 * Boolean
 
 * Integers
@@ -25,6 +27,10 @@ String representation of data types. Details.
 ---------------------------------------------
 Each data type has a string representation, which is used in hive
 configuration files. The details are described below. 
+
+* Strings
+
+  FIXME. 
 
 * Boolean
 
