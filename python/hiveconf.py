@@ -648,7 +648,11 @@ class _HiveFileParser:
             url = self.url
         
         print >>debugw, "Opening URL", url
-        file = urllib2.urlopen(url) 
+        try:
+            file = urllib2.urlopen(url)
+        except IOError: # We could not read a file. Just return, this is part
+            # of the Hiveconf specification.
+            return
 
         if not rootfolder:
             rootfolder = Folder(url, url, "/")
