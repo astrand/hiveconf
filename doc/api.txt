@@ -1,0 +1,46 @@
+
+
+Open hive
+=========
+hive = hiveconf.open_hive("tst.hive")
+
+Returns a folder. 
+
+
+Read values
+===========
+hive.get_string("/colors/background")
+hive.get_bool()
+hive.get_integer()
+hive.get_float()
+hive.get_binary()
+
+hive.get_string_list()
+hive.get_bool_list()
+hive.get_integer_list()
+hive.get_float_list()
+hive.get_binary_list()
+
+
+Set values
+==========
+hive.set_string("/colors/background", "blue")
+hive.set_bool("/colors/transparent_borders", 1)
+hive.set_integer()
+hive.set_float()
+hive.set_binary()
+
+hive.set_string_list()
+hive.set_bool_list()
+hive.set_integer_list()
+hive.set_float_list()
+hive.set_binary_list()
+
+If you set a parameter that doesn't exist, it will be created. 
+
+
+Folder management etc
+=====================
+hive.lookup("/colors")
+
+hive.walk()
