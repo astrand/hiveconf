@@ -121,3 +121,57 @@
 
 [kde/slip]
 %mount /usr/share/config/sliprc
+
+[kde/kcmnsplugin]
+%mount /usr/share/config/kcmnspluginrc
+
+[kde/globals]
+%mount /usr/share/config/kdeglobals
+
+[kde/kdeprint]
+%mount /usr/share/config/kdeprintrc
+
+[kde/kdewizard]
+%mount /usr/share/config/kdewizardrc
+
+[kde/kicker]
+%mount /usr/share/config/kickerrc
+
+[kde/klaunch]
+%mount /usr/share/config/klaunchrc
+
+[kde/knotify.events]
+%mount /usr/share/config/knotify.eventsrc
+
+[kde/knotify]
+%mount /usr/share/config/knotifyrc
+
+[kde/konqsidebartng]
+%mount /usr/share/config/konqsidebartng.rc
+
+[kde/korgac]
+%mount /usr/share/config/korgacrc
+
+[kde/korganizer]
+%mount /usr/share/config/korganizerrc
+
+[kde/ksmserver]
+%mount /usr/share/config/ksmserverrc
+
+[kde/ksslcalist]
+%mount /usr/share/config/ksslcalist
+
+[kde/ksysv]
+%mount /usr/share/config/ksysvrc
+
+[kde/kthemestyle]
+%mount /usr/share/config/kthemestylerc
+
+[kde/kuser]
+%mount /usr/share/config/kuserrc
+
+[kde/kwrited]
+%mount /usr/share/config/kwritedrc
+
+[kde/profile]
+%mount /usr/share/config/profilerc
