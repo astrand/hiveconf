@@ -92,7 +92,9 @@ Methods for setting parameter values
 
 The following methods are used to set parameter values. The
 parameter_path is relative to the file given to open_hive(). If the
-parameter does not exist, if will be created. 
+parameter does not exist, if will be created. These methods returns
+true if the operation was successful. A false value may be returned,
+for example, when no writable hive exists. 
 
 set_string(parameter_path, value)
 
