@@ -268,11 +268,11 @@ class Folder(NamespaceObject):
 
         self.update(source)
 
-    def update(self, source):
+    def _update(self, source):
         if source:
             self.sources.append(source)
 
-    def addobject(self, obj, objname):
+    def _addobject(self, obj, objname):
         if self.exists(objname):
             raise ObjectExistsError
 
@@ -318,7 +318,7 @@ class Folder(NamespaceObject):
         if not param:
             # Add new parameter
             # FIXME
-            folder.addobject(Parameter(new_value, "", "", paramname), paramname)
+            folder._addobject(Parameter(new_value, "", "", paramname), paramname)
         else:
             # Update existing parameter
             param.set_string(new_value)
@@ -429,7 +429,7 @@ def open_hive(url, rootfolder=None):
             paramname = paramname.strip()
             paramvalue = paramvalue.strip()
             print >>debugw, "Read parameter line", paramname
-            curfolder.addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
+            curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
         else:
             raise SyntaxError(linenum)
 
@@ -443,7 +443,7 @@ def handle_section(rootfolder, sectionname, source):
     folder = rootfolder._lookup_list(comps)
     if folder:
         # Folder already exists. Update with new information. 
-        folder.update(source)
+        folder._update(source)
     else:
         folder = _create_folders(rootfolder, comps, source)
 
@@ -471,7 +471,7 @@ def _create_folders(folder, comps, source):
         else:
             obj = Folder(None, folder.write_target)
 
-        folder.addobject(obj, first_comp)
+        folder._addobject(obj, first_comp)
 
     if len(comps) == 1:
         # Last step in recursion
@@ -518,7 +518,7 @@ def mount_directive(args, curfolder, url, linenum):
                     paramname = value
 
             paramvalue = open(mount_url).read()
-            curfolder.addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
+            curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname), paramname)
             
         else:
             print >> sys.stderr, "%s: line %d: unsupported format" % (url, linenum)
