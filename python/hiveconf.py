@@ -344,13 +344,28 @@ class Folder(NamespaceObject):
     #
     # Get methods
     #
-    def get_folders(self):
-        """Get folder names in this folder"""
-        return self._folders.keys()
+    def get_folders(self, folderpath, default=None):
+        """Get folder names in folder"""
+        if default == None:
+            default = []
+        
+        folder = self.lookup(folderpath)
 
-    def get_parameters(self):
+        if not folder:
+            return default
+        else:
+            return folder._folders.keys()
+        
+    def get_parameters(self, folderpath, default=None):
         """Get parameter names in this folder"""
-        return self._parameters.keys()
+        if default == None:
+            default = []
+
+        folder = self.lookup(folderpath)
+        if not folder:
+            return default
+        else:
+            return folder._parameters.keys()
 
     def _get_value(self, parampath, default, method):
         param = self.lookup(parampath)
