@@ -156,5 +156,14 @@ attribute namespace
     The attribute namespace contains attributes for parameters in the
     configuration namespace. Each parameter in the configuration
     namespace corresponds to a folder in the attribute namespace. The
-    attribute namespace is used to store meta-data about parameters. 
+    attribute namespace is used to store parameter meta-data. 
 
+hive
+
+    A tree of parameters and folders, defined by a single URL. 
+ 
+    This term is actually borrowed from the Windows registry. The MS
+    definition is:
+   
+    "a body of keys, subkeys, and values that is rooted at the top of
+    the registry hierarchy. A hive is backed by a single file ..."
