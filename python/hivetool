@@ -39,13 +39,13 @@ def handle_param(hive, param):
     (paramtype, param) = get_type(param)
     (parampath, value) = get_value(param)
 
-    method = getattr(hive, "get_%s" % paramtype)
-        
     if not value:
         # Display value
+        method = getattr(hive, "get_%s" % paramtype)
         print method(parampath)
     else:
         # Set value
+        method = getattr(hive, "set_%s" % paramtype)
         method(parampath, value)
 
 
