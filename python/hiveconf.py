@@ -29,7 +29,7 @@ import string
 import glob
 import getopt
 
-class DebugWriter:
+class _DebugWriter:
     def __init__(self, debug):
         self.debug = debug
     
@@ -37,10 +37,10 @@ class DebugWriter:
         if self.debug:
             sys.stderr.write(data)
 
-debugw = DebugWriter(debug=0)
+debugw = _DebugWriter(debug=0)
 
 
-class IndentPrinter:
+class _IndentPrinter:
     def __init__(self):
         self.indent = 0
         self.line_indented = 0
@@ -82,7 +82,7 @@ class SyntaxError(Error):
 # Utility functions
 #
 
-def path2comps(path):
+def _path2comps(path):
     # Special case: root folder
     if path == "/":
         return ["/"]
@@ -97,13 +97,13 @@ def path2comps(path):
     
     return path.split("/")
 
-def comps2path(comps):
+def _comps2path(comps):
     result = ""
     for component in comps:
         result += "/" + component
     return result
 
-def fixup_url(url):
+def _fixup_url(url):
     """Change url slightly, so that urllib can be used for POSIX paths"""
     (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
     if not scheme:
@@ -111,14 +111,14 @@ def fixup_url(url):
 
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
-def get_url_scheme(url):
+def _get_url_scheme(url):
     return urlparse.urlsplit(url)[0]
 
-def get_url_file(url):
+def _get_url_file(url):
     """For URLs with file scheme, get path component"""
     return urlparse.urlsplit(url)[2]
 
-def fixup_sectionname(sn):
+def _fixup_sectionname(sn):
     """Add leading slash, remove trailing slash, if necessary"""
     if not sn.startswith("/"):
         sn = "/" + sn
@@ -308,7 +308,7 @@ class Folder(NamespaceObject):
         self.sources = []
         # URL to write to when adding new folder objects. 
         self.write_target = write_target
-        self.sectionname = fixup_sectionname(sectionname)
+        self.sectionname = _fixup_sectionname(sectionname)
         self._update(source)
 
     def __repr__(self):
@@ -390,7 +390,7 @@ class Folder(NamespaceObject):
     # Set methods
     #
     def _set_value(self, parampath, value, method):
-        comps = path2comps(parampath)
+        comps = _path2comps(parampath)
         folder = self._lookup_list(comps[:-1], autocreate=1) 
         paramname = comps[-1]
         param = folder.lookup(paramname)
@@ -442,7 +442,7 @@ class Folder(NamespaceObject):
         """Lookup an object. objname is like global/settings/background
         Returns None if object is not found.
         """
-        comps = path2comps(objpath)
+        comps = _path2comps(objpath)
         return self._lookup_list(comps, autocreate)
 
     def _lookup_list(self, comps, autocreate=0, sectionname=""):
@@ -489,7 +489,7 @@ class Folder(NamespaceObject):
 
     def walk(self, recursive=1, indent=None):
         if not indent:
-            indent = IndentPrinter()
+            indent = _IndentPrinter()
 
         # Print Parameters and values
         for (paramname, param) in self.parameters.items():
@@ -528,7 +528,7 @@ class HiveFileParser:
         if not url:
             url = self.url
         
-        url = fixup_url(url)
+        url = _fixup_url(url)
         file = urllib2.urlopen(url)
 
         if not rootfolder:
@@ -590,7 +590,7 @@ class HiveFileParser:
 
     def handle_section(self, rootfolder, sectionname, source):
         print >>debugw, "handle_section for section", sectionname
-        comps = path2comps(sectionname)
+        comps = _path2comps(sectionname)
 
         folder = rootfolder._lookup_list(comps)
         if folder:
@@ -660,11 +660,11 @@ class HiveFileParser:
         mnturl = args[0]
         del args
 
-        if get_url_scheme(url) == "file":
+        if _get_url_scheme(url) == "file":
             # Strip file:
-            mnturl = get_url_file(mnturl)
+            mnturl = _get_url_file(mnturl)
             # Get source file directory
-            src_base_dir = os.path.dirname(get_url_file(url))
+            src_base_dir = os.path.dirname(_get_url_file(url))
             # Construct new path, relative to source dir
             mnturl = os.path.join(src_base_dir, mnturl)
             
@@ -675,7 +675,7 @@ class HiveFileParser:
             glob_result.sort()
             for url_to_mount in glob_result:
                 # Add file: 
-                urls_to_mount.append(fixup_url(url_to_mount))
+                urls_to_mount.append(_fixup_url(url_to_mount))
             del glob_result
         else:
             urls_to_mount = [mnturl]
