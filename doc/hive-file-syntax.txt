@@ -1,28 +1,53 @@
 
+Overview
+--------
+The file consists of sections, parameters, and directives. The file
+is line-based - that is, each newline-terminated line represents
+either a comment, a section name or a parameter.
 
-The file consists of sections and parameters. A section begins with
-the name of the section in square brackets and continues until the
-next section begins. Sections defines "Folders" in the HiveConfig
-namespace. Sections contain parameters of the form
+Section, parameter names, and directives are not case sensitive.
 
-name = value
+Any line ending in a '\' is continued on the next line in the
+customary UNIX fashion.
 
-The file is line-based - that is, each newline-terminated line
-represents either a comment, a section name or a parameter.
 
-Section and parameter names are not case sensitive.
+Sections
+--------
+A section begins with the name of the section in square brackets and
+continues until the next section begins. Sections defines "Folders" in
+the HiveConfig namespace. Sections contain parameters.
 
-Only the first equals sign in a parameter is significant.  Whitespace
+
+Parameters
+----------
+Parameters have the form m
+
+    name = value
+
+Only the first equals sign in a parameter is significant. Whitespace
 before or after the first equals sign is discarded. Leading, trailing
 and internal whitespace in section and parameter names is
 irrelevant. Leading and trailing whitespace in a parameter value is
 discarded. Internal whitespace within a parameter value is retained
 verbatim.
 
+
+Comments
+--------
 Any line beginning with a semicolon (';') or a hash ('#') character is
 ignored, as are lines containing only whitespace.
 
-Any line ending in a '\' is continued on the next line in the
-customary UNIX fashion.
 
-**FIXME: "Here-documents" are allowed. Describe them as well. 
+Directives
+----------
+
+%mount <URL>
+
+    Mounts another hive. This basically works like an "include"
+    directive, but handles writes as well. Hiveconf remembers which
+    file (or other source) a parameter was read from, so it knows
+    where to change a parameter on update.
+
+    <URL> can be a simple, relative filename, like
+    "../app.hive". Wildcard characters are allowed. 
+
