@@ -301,8 +301,8 @@ class Parameter(NamespaceObject):
 class Folder(NamespaceObject):
     """A folder. Does not contain the name of the folder itself."""
     def __init__(self, source, write_target, sectionname):
-        self.folders = {}
-        self.parameters = {}
+        self._folders = {}
+        self._parameters = {}
         # List of URLs that has contributed to this Folder.
         self.sources = []
         # URL to write to when adding new folder objects. 
@@ -328,22 +328,30 @@ class Folder(NamespaceObject):
 
         if isinstance(obj, Parameter):
             print >>debugw, "Adding parameter", objname
-            self.parameters[objname] = obj
+            self._parameters[objname] = obj
         elif isinstance(obj, Folder):
             print >>debugw, "Adding folder", objname
-            self.folders[objname] = obj
+            self._folders[objname] = obj
         else:
             raise InvalidObjectError
 
     def _get_object(self, objname):
-        return self.folders.get(objname) or self.parameters.get(objname)
+        return self._folders.get(objname) or self._parameters.get(objname)
         
     def _exists(self, objname):
-        return self.folders.has_key(objname) or self.parameters.has_key(objname)
+        return self._folders.has_key(objname) or self._parameters.has_key(objname)
 
     #
     # Get methods
     #
+    def get_folders(self):
+        """Get folder names in this folder"""
+        return self._folders.keys()
+
+    def get_parameters(self):
+        """Get parameter names in this folder"""
+        return self._parameters.keys()
+
     def _get_value(self, parampath, default, method):
         param = self.lookup(parampath)
 
@@ -495,14 +503,14 @@ class Folder(NamespaceObject):
             indent = _IndentPrinter()
 
         # Print Parameters and values
-        for (paramname, param) in self.parameters.items():
+        for (paramname, param) in self._parameters.items():
             if not debugw.debug:
                 print >> indent, paramname, "=", param.get_string()
             else:
                 print >> indent, paramname, param
 
         # Print Foldernames and their contents
-        for (foldername, folder) in self.folders.items():
+        for (foldername, folder) in self._folders.items():
             if foldername == "/":
                 continue
             
