@@ -23,7 +23,6 @@
 # SOFTWARE.
 
 import sys
-import types
 
 class DebugWriter:
     def __init__(self, debug):
