@@ -185,6 +185,24 @@ class Parameter(NamespaceObject):
             raise BadBinaryFormat()
 
     #
+    # Compound data types, get operations
+    #
+    def get_string_list(self):
+        return self.value.split()
+
+    def get_bool_list(self):
+        return map(self._string2bool, self.value.split())
+
+    def get_integer_list(self):
+        return map(int, self.value.split())
+
+    def get_float_list(self):
+        return map(float, self.value.split())
+
+    def get_binary_list(self):
+        return map(self._hexascii2string, self.value.split())
+    
+    #
     # Primitive data types, set operations
     #
     def set_string(self, new_value):
@@ -206,24 +224,6 @@ class Parameter(NamespaceObject):
     def set_binary(self, new_value):
         """Set binary value"""
         self.value = self._string2hexascii(new_value)
-
-    #
-    # Compound data types, get operations
-    #
-    def get_string_list(self):
-        return self.value.split()
-
-    def get_bool_list(self):
-        return map(self._string2bool, self.value.split())
-
-    def get_integer_list(self):
-        return map(int, self.value.split())
-
-    def get_float_list(self):
-        return map(float, self.value.split())
-
-    def get_binary_list(self):
-        return map(self._hexascii2string, self.value.split())
 
     #
     # Compound data types, set operations
