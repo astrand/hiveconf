@@ -1,0 +1,99 @@
+#!/usr/bin/env python2
+# -*-Python-*-
+
+import hiveconf
+import getopt
+import sys
+
+VERSION="0.0"
+DEFAULTTYPE="string"
+
+
+def get_type(s):
+    """Parse parameter string. Returns (type, parameter)"""
+    words = s.split(":", 1)
+    if not words[1:]:
+        # No colon in string
+        return (DEFAULTTYPE, s)
+    
+    (beforecolon, aftercolon) = words
+    if beforecolon in ("string", "bool", "integer", "float", "binary",
+                       "stringlist", "boollist", "integerlist",
+                       "floatlist", "binarylist"):
+        return (beforecolon, aftercolon)
+    else:
+        return (DEFAULTTYPE, s)
+
+
+def get_value(s):
+    """Parse parameter string. Returns (parameterpath, value)"""
+    words = s.split("=", 1)
+    if not words[1:]:
+        # No equal sign in string
+        return (s, None)
+    else:
+        return tuple(words)
+
+
+def handle_param(hive, param):
+    (paramtype, param) = get_type(param)
+    (parampath, value) = get_value(param)
+
+    if not value:
+        # Display value
+        print hive.get_string(parampath)
+    else:
+        # Set value
+        hive.set_string(parampath, value)
+
+
+def usage():
+    print >>sys.stderr, """
+hivetool [options] parameter[=value] ...
+
+  -a,--all-entries      Print all parameters and values in a folder
+  -R,--recursive	Like -a, but ascend folders recursively
+  -t,--type <type>	Set type for the next listed parameters. Type is one of:
+			string, bool, integer, float, binary,
+			stringlist, boollist, integerlist, floatlist, binarylist
+			Default is string
+  -r,--root <file>	Specify root hive file. Default is /etc/root.hive
+  -v,--version		Print version
+  -?,--help		Show this help message
+"""
+
+
+
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "aRr:v?",
+                                   ["all-entries", "recursive", "root=", "version", "help"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+
+    roothive = "/etc/hive.root"
+    for o, a in opts:
+        if o in ("-a", "--all-entries"):
+            raise NotImplementedError
+        if o in ("-R", "--recursive"):
+            raise NotImplementedError
+        if o in ("-r", "--root"):
+            roothive = a
+        if o in ("-v", "--version"):
+            print >> sys.stderr, "hivetool version", VERSION
+            sys.exit(0)
+        if o in ("-?", "--help"):
+            usage()
+            sys.exit(0)
+
+    # Try to open root hive
+    hive = hiveconf.open_hive(roothive)
+
+    for param in args:
+        handle_param(hive, param)
+
+
+if __name__ == "__main__":
+    main()
+
