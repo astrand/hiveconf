@@ -136,6 +136,17 @@ Example:
 root.set_bool("/globals/load printers", 1)
 
 
+Methods for Deleting Folders and Parameters
+-------------------------------------------
+
+delete(path, [recursive=0])
+
+Delete folder or parameter at path. If recursive is true, all folders
+and parameters under the path will be deleted as well. If not, the exception
+FolderNotEmpty will be raised if there is folders or parameters under the 
+path specified.
+
+
 Miscellaneous methods
 ---------------------
 
