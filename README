@@ -1,2 +1,10 @@
 
-FIXME
+Hiveconf is a system for storing configuration data (key-value
+pairs). The purpose is similiar to the Windows registry or
+GConf. Configuration data can be retrieved and modifyed via a simple
+API. The data is stored using different "backends". The default
+backend is using a text file format, similiar to smb.conf or Windows
+.INI files.
+
+Read the documentation in the "doc" directory for more
+information. You might want to start with "doc/introduction.txt".
