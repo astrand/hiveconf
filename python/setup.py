@@ -17,6 +17,6 @@ setup (name = "hiveconf",
        py_modules = ["hiveconf"],
        data_files=[('/usr/bin', ['hivetool']),
                    ('/etc', ['etc/root.hive']),
-                   ('/etc/hiveconf.d', [])
+                   ('/etc/hiveconf.d', ["etc/hiveconf.d/kde.hive", "etc/hiveconf.d/samba.hive"])
                    ]
        )
