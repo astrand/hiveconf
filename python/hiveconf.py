@@ -299,7 +299,7 @@ class Folder(NamespaceObject):
 
 ##         print >> open(filename, "a"), sectionstring
 
-    def get(self, objname):
+    def _get_object(self, objname):
         return self.folders.get(objname) or self.parameters.get(objname)
         
     def exists(self, objname):
@@ -339,7 +339,7 @@ class Folder(NamespaceObject):
         first_comp = comps[0]
         rest_comps = comps[1:] 
         
-        obj = self.get(first_comp)
+        obj = self._get_object(first_comp)
         if not obj:
             return
 
@@ -456,7 +456,7 @@ def _create_folders(folder, comps, source):
     first_comp = comps[0]
     rest_comps = comps[1:] 
 
-    obj = folder.get(first_comp)
+    obj = folder._get_object(first_comp)
     if not obj:
         # Create folder
         if len(comps) == 1:
