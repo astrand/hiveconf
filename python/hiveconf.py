@@ -256,7 +256,7 @@ class Parameter(NamespaceObject):
 
 class Folder(NamespaceObject):
     """A folder. Does not contain the name of the folder itself."""
-    def __init__(self, source, write_target, prefix):
+    def __init__(self, source, write_target, sectionname):
         self.folders = {}
         self.parameters = {}
         # When adding new objects, we need to write them to some file.
@@ -278,8 +278,7 @@ class Folder(NamespaceObject):
         self.sources = []
         # URL to write to when adding new folder objects. 
         self.write_target = write_target
-        # Mount prefix for this folder, in write_target. 
-        self.prefix = prefix
+        self.sectionname = sectionname
         self._update(source)
 
     def _update(self, source):
@@ -343,20 +342,8 @@ class Folder(NamespaceObject):
             # Write new params to the file specified by the Folders
             # write_target
             source = folder.write_target
-
-            # Sectionname
-            prefix_comps = path2comps(folder.prefix)
-            parampath_comps = comps[:-1]
-
-            if not prefix_comps == parampath_comps[:len(prefix_comps)]:
-                # folder prexis is not a prefix for parampath.
-                # Something is wrong!
-                raise "Internal error"
-
-            sectionname = comps2path(parampath_comps[len(prefix_comps):])
-
             folder._addobject(Parameter(new_value, source,
-                                        sectionname, paramname), paramname)
+                                        folder.sectionname, paramname), paramname)
             # Write new parameter to disk
             # This should be done by parsing the folders write_target file
             # and fins the correct section, and then add this parameter just
@@ -407,7 +394,7 @@ class Folder(NamespaceObject):
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
-            print >>indent, foldername + "/ (sources:%s, write_target:%s, prefix:%s)" % (folder.sources, folder.write_target, folder.prefix)
+            print >>indent, foldername + "/ (sources:%s, write_target:%s, sectionname:%s)" % (folder.sources, folder.write_target, folder.sectionname)
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
@@ -423,7 +410,7 @@ class HiveFileParser:
         # URL to entry hive
         self.url = url
 
-    def parse(self, url=None, rootfolder=None, prefix="/"):
+    def parse(self, url=None, rootfolder=None):
         """Open and parse a hive file. Returns a folder"""
         if not url:
             url = self.url
@@ -432,7 +419,7 @@ class HiveFileParser:
         file = urllib2.urlopen(url)
 
         if not rootfolder:
-            rootfolder = Folder(url, url, prefix)
+            rootfolder = Folder(url, url, "/")
         curfolder = rootfolder
         linenum = 0
         sectionname = ""
@@ -457,7 +444,7 @@ class HiveFileParser:
 
                 sectionname = line[1:-1]
                 print >>debugw, "Read section line", sectionname
-                curfolder = self.handle_section(rootfolder, sectionname, url, prefix)
+                curfolder = self.handle_section(rootfolder, sectionname, url)
 
             elif line.startswith("%"):
                 # Directive
@@ -467,7 +454,7 @@ class HiveFileParser:
 
                 # %mount
                 if directive == "%mount":
-                    self.mount_directive(args, curfolder, url, linenum, prefix, sectionname)
+                    self.mount_directive(args, curfolder, url, linenum, sectionname)
                 else:
                     print >> sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
 
@@ -484,7 +471,7 @@ class HiveFileParser:
         return rootfolder
 
 
-    def handle_section(self, rootfolder, sectionname, source, prefix):
+    def handle_section(self, rootfolder, sectionname, source):
         print >>debugw, "handle_section for section", sectionname
         comps = path2comps(sectionname)
 
@@ -493,16 +480,17 @@ class HiveFileParser:
             # Folder already exists. Update with new information. 
             folder._update(source)
         else:
-            folder = self._create_folders(rootfolder, comps, source, prefix)
+            folder = self._create_folders(rootfolder, comps, source)
 
         return folder
 
 
     # Create folder in memory. Not for external use.
     # The external function should also write folder to disk. 
-    def _create_folders(self, folder, comps, source, prefix):
+    def _create_folders(self, folder, comps, source, sectionname=""):
         first_comp = comps[0]
-        rest_comps = comps[1:] 
+        rest_comps = comps[1:]
+        sectionname = os.path.join(sectionname, comps[0])
 
         obj = folder._get_object(first_comp)
         if not obj:
@@ -515,9 +503,9 @@ class HiveFileParser:
                 else:
                     write_target = source
 
-                obj = Folder(source, write_target, prefix)
+                obj = Folder(source, write_target, sectionname)
             else:
-                obj = Folder(None, folder.write_target, prefix)
+                obj = Folder(None, folder.write_target, sectionname)
 
             folder._addobject(obj, first_comp)
 
@@ -529,10 +517,11 @@ class HiveFileParser:
             if not isinstance(obj, Folder):
                 raise ObjectExistsError
 
-            return self._create_folders(obj, rest_comps, source, prefix)
+            return self._create_folders(obj, rest_comps, source, sectionname)
+                                        
 
 
-    def mount_directive(self, args, curfolder, url, linenum, prefix, sectionname):
+    def mount_directive(self, args, curfolder, url, linenum, sectionname):
         try:
             opts, args = getopt.getopt(args, "t:a:")
         except getopt.GetoptError:
@@ -554,7 +543,7 @@ class HiveFileParser:
         # FIXME: Only glob for file URLs. 
         for mount_url in glob.glob(args[0]):
             if format == "hive":
-                self.parse(mount_url, curfolder, os.path.join(prefix, sectionname))
+                self.parse(mount_url, curfolder)
 
             elif format == "parameter": # FIXME: Separate function/module/library
                 paramname = "default" # FIXME
