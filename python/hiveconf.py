@@ -84,11 +84,11 @@ class SyntaxError(Error):
 
 def path2comps(path):
     # Remove first slash
-    if path[0] == "/":
+    if path.startswith("/"):
         path = path[1:]
 
     # Remove last slash
-    if path[-1] == "/":
+    if path.endswith("/"):
         path = path[:-1]
     
     return path.split("/")
@@ -403,7 +403,6 @@ class Folder(NamespaceObject):
     #
 
     def _set_value(self, parampath, value, method):
-        print "SET_VALUE", value, method
         comps = path2comps(parampath)
         folder = self._lookup_list(comps[:-1], autocreate=1) 
         paramname = comps[-1]
