@@ -1,0 +1,160 @@
+Introduction
+=====================
+
+Hiveconf is a system for storing configuration data (key-value
+pairs). The purpose is similiar to the Windows registry or
+GConf. Configuration data can be retrieved and modifyed via a simple
+API. The data is stored using different "backends". The default
+backend is using a text file format, similiar to smb.conf or Windows
+.INI files. 
+
+
+Motivation
+==========
+
+The UNIX community has for long recognized the benefits of storing
+configuration data in simple, human-readable, line-oriented text
+files.  However, the current situation is a bit chaotic and can be
+improved further. The file format is not standardized, even though a
+simple, standard format is sufficient in almost any
+application. Further, there is a common API for reading and writing
+configuration files. By providing an API, we get several benefits. 
+
+
+Benefits for application developers
+-----------------------------------
+
+* No need to reinvent the wheel every time configuration data needs to
+  be stored or loaded. Applications should only need to be concerned
+  with what to store, not how.
+
+* Increased flexibility: The application can automatically take
+  advantage of new way of storing data (new "backends"), such as
+  network storage. Hiveconf tries to do for configuration what
+  "Pluggable Authentication Modules" did to authentication.
+
+* Greater scalability: The backend storage can be replaced without
+  needing to change anything in the application. For example, it's
+  possible to change from textfiles to a gdbm database, without
+  modifying the application itself.
+
+
+Benefits for administrators
+---------------------------
+
+* All applications using hiveconf deal with configuration the same
+  way, which means easier administration. Hiveconf can be useful even
+  if the application does *not* use Hiveconf: As long as the
+  applications configuration file format is compatible with one
+  Hiveconf backend, the Hiveconf tools can be used to view and modify
+  the configuration. Examples of such applications are Samba and KDE. 
+
+* Configuration data can be relocated to any file, partition or
+  server. 
+
+
+* Parameters can be changed mechanically, with a simple command.  For
+  example, it is possible to change the Samba workgroup name with a
+  command like:
+
+  hivetool /services/samba/global/workgroup=my_workgroup
+
+  The task of writing GUIs for modifying configuration is also greatly
+  simplified. 
+
+
+Design principlies
+==================
+The following design principles was stated before the design started:
+Hiveconf should:
+
+* Should have a standardized text-based configuration file format, but
+  also allow other backends.
+
+* Should allow manual editing of configuration files. 
+
+* Allow multiple installations of applications on the same system.
+  For example, it should be possible to have one Samba installed with
+  prefix=/usr and another one installed with prefix=/usr/local,
+  without requiring these to share the same configuration. This means
+  that we cannot force namespaces onto applications; we cannot require
+  that Samba configuration data should always be stored in the file
+  /configdata/services/web/apache, for example.
+
+* Provide an optional single machine-wide namespace. 
+
+* Provide (optional) support for meta-data, such as parameter type,
+  allowed values, description, changelog etc. 
+
+
+Terminology
+===========
+
+parameter
+
+    Configuration data. A parameter has two attributes: the
+    name, and the value.
+
+    Example:
+    workgroup=my_workgroup
+
+    Windows term: value entry
+    GConf term: key-value pair
+
+
+folder
+  
+    A Hiveconf folder is just like a directory or folder in a normal
+    file system. A Hiveconf folder contains parameters and other
+    folders.
+
+    Windows term: key
+    GConf term: directory
+
+
+parameter path
+
+    The name of a parameter, and the folders leading up to this
+    parameter. 
+
+    GConf term: key
+
+
+application-relative parameter path
+    
+    The path to a certain parameter, from the applications point of
+    view. The parameter path is hard-coded in applications and seldom
+    change.
+
+    Example:
+    /globals/workgroup
+
+
+host-relative parameter path
+
+    The path to a certain parameter, from the system/administrators
+    point of view. This parameter path consists of two parts: One
+    machine-configurable part and the application-relative parameter
+    path.  
+
+    Example:
+    /services/samba/globals/workgroup
+
+
+configuration namespace
+
+    A configuration namespace is a tree of folders and parameters. It
+    is defined by one or more hive files on disk, and possible other
+    configuration sources such as LDAP, HTTP etc. Multiple
+    configuration namespaces can form a larger configuration
+    namespace, such as a machine-wide namespace consisting of all
+    application namespaces.
+    
+
+attribute namespace
+
+    The attribute namespace contains attributes for parameters in the
+    configuration namespace. Each parameter in the configuration
+    namespace corresponds to a folder in the attribute namespace. The
+    attribute namespace is used to store meta-data about parameters. 
+
