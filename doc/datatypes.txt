@@ -1,0 +1,20 @@
+
+Supported data types in HiveConf
+================================
+
+Primitive data types:
+
+* Boolean
+
+* Integers
+
+* Floats
+
+* Binary data
+
+
+Compound data types:
+
+* Lists of the above primitive data types. All values in a list must
+  have the same primitive type.
+
