@@ -1,8 +1,14 @@
-include python/hiveconf.py
-include python/hivetool
 include MANIFEST.in
 include create_pth.sh
+include Makefile
+include hiveconf.spec
+
+include python/hiveconf.py
+include python/hivetool
+
 include etc/root.hconf
 include etc/hiveconf.d/*.hconf
+
 include doc/*.txt doc/TODO doc/*.sxi
+
 global-exclude *~ *.pyo *.pyc .cvsignore
