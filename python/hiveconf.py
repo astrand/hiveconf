@@ -680,7 +680,8 @@ class _HiveFileParser:
             if line.startswith("["):
                 # Folder
                 if not line.endswith("]"):
-                    raise SyntaxError(linenum)
+                    print >>sys.stderr, "%s: line %d: Syntax error: line does not end with ]" % (url, linenum)
+                    continue
 
                 sectionname = line[1:-1]
                 print >>debugw, "Read section line", sectionname
@@ -696,7 +697,7 @@ class _HiveFileParser:
                 if directive == "%mount":
                     self.mount_directive(args, curfolder, url, linenum, sectionname)
                 else:
-                    print >> sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
+                    print >>sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
 
             elif line.find("=") != -1:
                 # Parameter
