@@ -58,8 +58,12 @@ class NoSuchKeyError(Error): pass
 class NoSuchFolderError(Error): pass
 class ObjectExistsError(Error): pass
 class InvalidObjectError(Error): pass
-# FIXME: Should contain at least line number
-class SyntaxError(Error): pass
+class SyntaxError(Error):
+    def __init__(self, linenum):
+        self.linenum = linenum
+
+    def __str__(self):
+        return "Bad line %d" % self.linenum
 
 #
 # Utils
@@ -184,10 +188,12 @@ def open_hive(filename):
     file = open(filename)
     rootfolder = Folder()
     curfolder = rootfolder
+    linenum = 0
 
     # Read & parse entire hive file
     while 1:
         line = file.readline()
+        linenum += 1
 
         if not line:
             break
@@ -211,7 +217,7 @@ def open_hive(filename):
             print >>debugw, "Read parameter line", paramname
             curfolder.addobject(Parameter(paramvalue), paramname)
         else:
-            raise SyntaxError
+            raise SyntaxError(linenum)
 
     return rootfolder
  
