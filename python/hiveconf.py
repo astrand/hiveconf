@@ -56,7 +56,7 @@ class IndentPrinter:
         
 
 class Error(Exception): pass
-class NoSuchKeyError(Error): pass
+class NoSuchParameterError(Error): pass
 class NoSuchFolderError(Error): pass
 class ObjectExistsError(Error): pass
 class InvalidObjectError(Error): pass
@@ -65,6 +65,7 @@ class BadIntegerFormat(Error): pass
 class BadFloatFormat(Error): pass
 class BadBinaryFormat(Error): pass
 class BadListFormat(Error): pass
+class ReadOnlySource(Error): pass
     
 class SyntaxError(Error):
     def __init__(self, linenum):
@@ -98,10 +99,13 @@ class NamespaceObject:
 class Parameter(NamespaceObject):
     # Innehåller textsträngsvärdet "value"; men oparsat, dvs ej försökt översätta till
     # någon speciell datatyp. 
-    def __init__(self, value, source):
+    def __init__(self, value, source, sectionname, paramname):
         self.value = value
         # URL that this parameter was read from
         self.source = source
+        self.sectionname = sectionname
+        # FIXME: The class probably shouldn't know about it's own name.
+        self.paramname = paramname
 
     #
     # Primitive data types
@@ -137,6 +141,11 @@ class Parameter(NamespaceObject):
             self._hexascii2string(self.value)
         except ValueError:
             raise BadBinaryFormat()
+
+    def set_string(self, new_value):
+        """Set string value"""
+        pu = ParamUpdater(self.source, self.sectionname, self.paramname)
+        pu.update(new_value)
 
     #
     # Compound data types
@@ -278,6 +287,7 @@ def open_hive(url):
     rootfolder = Folder()
     curfolder = rootfolder
     linenum = 0
+    sectionname = ""
 
     # Read & parse entire hive file
     while 1:
@@ -297,18 +307,85 @@ def open_hive(url):
             if not line.endswith("]"):
                 raise SyntaxError
 
-            foldername = line[1:-1]
-            print >>debugw, "Read folder line", foldername
-            curfolder = rootfolder.lookup(foldername, autocreate=1)
+            sectionname = line[1:-1]
+            print >>debugw, "Read section line", sectionname
+            curfolder = rootfolder.lookup(sectionname, autocreate=1)
         elif line.find("=") != -1:
             # Parameter
-            (paramname, paramvalue) = line.split("=")
+            (paramname, paramvalue) = line.split("=", 1)
             paramname = paramname.strip()
             paramvalue = paramvalue.strip()
             print >>debugw, "Read parameter line", paramname
-            curfolder.addobject(Parameter(paramvalue, url), paramname)
+            curfolder.addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
         else:
             raise SyntaxError(linenum)
 
     return rootfolder
- 
+
+
+class ParamUpdater:
+    def __init__(self, source, sectionname, paramname):
+        self.source = source
+        self.sectionname = sectionname
+        self.paramname = paramname
+
+        (scheme, netloc, self.filename, query, fragment) = urlparse.urlsplit(self.source)
+        if not scheme == "file":
+            # Only able to write to local files right now
+            raise ReadOnlySource()
+
+    def update(self, new_value):
+        # FIXME: Use file locking
+        f = open(self.filename, "r+")
+
+        correct_section = 0 
+        rest_data = ""
+        parameter_offset = None
+
+        # If this parameter is at top level, we are already in the
+        # correct section when we start parsing. 
+        if self.sectionname == "":
+            correct_section = 1
+
+        while 1:
+            line_offset = f.tell()
+            line = f.readline()
+
+            if not line:
+                break
+
+            line = line.strip()
+            
+            if line.startswith("#") or line.startswith(";") or not line:
+                continue
+
+            if line.startswith("["):
+                # Section
+                if not line.endswith("]"):
+                    # Ignore invalid section lines
+                    continue
+
+                correct_section = (self.sectionname == line[1:-1])
+                
+            elif correct_section and line.find("=") != -1:
+                (paramname, paramvalue) = line.split("=", 1)
+                paramname = paramname.strip()
+                paramvalue = paramvalue.strip()
+                if self.paramname == paramname:
+                    parameter_offset = line_offset
+                    rest_data = f.read()
+                    break
+
+        if parameter_offset == None:
+            # The parameter was not found!
+            raise NoSuchParameterError()
+
+        # Seek to parameter offset, and write new value
+        f.seek(parameter_offset)
+        print >> f, self.paramname + "=" + new_value
+
+        # Write rest
+        f.write(rest_data)
+        f.truncate()
+
+        
