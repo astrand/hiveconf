@@ -158,6 +158,7 @@ attribute namespace
     namespace corresponds to a folder in the attribute namespace. The
     attribute namespace is used to store parameter meta-data. 
 
+
 hive
 
     A tree of parameters and folders, defined by a single URL. The
@@ -168,3 +169,10 @@ hive
    
     "a body of keys, subkeys, and values that is rooted at the top of
     the registry hierarchy. A hive is backed by a single file ..."
+
+
+entry hive
+
+    The hive that applications opens. For example, the entry hive for
+    Samba could be /etc/samba/smb.hconf. The entry hive defines the
+    root of the applications namespace. 
