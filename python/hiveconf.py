@@ -27,6 +27,7 @@ import urllib2
 import urlparse
 import os
 import string
+import glob
 
 class DebugWriter:
     def __init__(self, debug):
@@ -355,9 +356,15 @@ def open_hive(url, rootfolder=None):
             curfolder = rootfolder.lookup(sectionname, autocreate=1)
         elif line.startswith("%"):
             # Directive
-            (directive, arguments) = line.split(None, 1)
+            fields = line.split()
+            directive = fields[0]
+            args = fields[1:]
+
+            # %mount
             if directive == "%mount":
-                open_hive(arguments, curfolder)
+                mount_directive(args, curfolder, url, linenum)
+            else:
+                print >> sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
             
         elif line.find("=") != -1:
             # Parameter
@@ -371,6 +378,15 @@ def open_hive(url, rootfolder=None):
 
     return rootfolder
 
+
+def mount_directive(args, curfolder, url, linenum):
+    if not len(args) == 1:
+        print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
+        return
+
+    for mount_url in glob.glob(args[0]):
+        open_hive(mount_url, curfolder) 
+        
 
 class ParamUpdater:
     def __init__(self, source, sectionname, paramname):
