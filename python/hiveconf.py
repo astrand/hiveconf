@@ -637,4 +637,8 @@ class HiveFileUpdater:
         f.write(rest_data)
         f.truncate()
 
-        
+    def add_section(self, sectionname):
+        """Add new section to end of file"""
+        f = open(self.filename, "a")
+        print >> f, "[%s]" % sectionname
+
