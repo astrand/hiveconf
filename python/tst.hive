@@ -2,37 +2,49 @@
 # Test Hive, based on Sambas smb.conf
 #
 
+
+
+
 # Toplevel parameter
-toplevel_param1=toplevel_value1 
+toplevel_param1=fff
 
 # Whitespace below and above
-
 
 # First level folder
 [globals] 
 # String
 workgroup = MYWORKGROUP
 # Integer, parameter name with spaces
-max log size = 50
+max log size=222
 # Float value
-deadtime = 10.2
+deadtime=12.3
 # Binary data ("GNU University")
-server string = 474e5520556e6976657273697479
+server string=474e55
 # List of bools
-boolean_list = yes no yes
+boolean_list=true true true false
 # List of integers
-integer_list = 110 90 22
+integer_list=1 2 3 0
 # List of floats
-float_list = 1.0 3.14 1e100
+float_list=1.2 2.3
 # List of strings
-interfaces = eth0 192.168.2.10/24 192.168.3.10/255.255.255.0
+interfaces=a b
 # List of binary data
-hostkeys = 474e5520556e6976657273697479 484e5520556e6976657273697479
+hostkeys=616161 626262
 
 
-# Second level folder
-[shares/tmp] 
+[foo] 
+%mount tstinc.hive
 
-# Boolean 
-public = yes 
 
+#%mount -t hive /tmp/hive.d/* 
+
+#%mount -t parameter -a name=smak /tmp/smak
+
+
+
+[/apple/vanilj/choklad]
+iilist=1 2 3 4
+storlek=true
+
+[/globals]
+workgroup = PETER
