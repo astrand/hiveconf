@@ -345,19 +345,19 @@ class Folder(NamespaceObject):
     #
     # Get methods
     #
-    def _get_value(self, parampath, method):
+    def _get_value(self, parampath, default, method):
         param = self.lookup(parampath)
         # Check if param really is a Parameter
         if not isinstance(param, Parameter):
             raise NotAParameterError()
         
         if not param:
-            return None
+            return default
         else:
             return method(param)
 
-    def get_string(self, parampath):
-        return self._get_value(parampath, Parameter.get_string)
+    def get_string(self, parampath, default=None):
+        return self._get_value(parampath, default, Parameter.get_string)
 
     def get_bool(self, parampath):
         return self._get_value(parampath, Parameter.get_bool)
@@ -671,9 +671,12 @@ class HiveFileParser:
             # Glob local files
             urls_to_mount =[]
             # FIXME: Warn if no files found?
-            for url_to_mount in glob.glob(mnturl).sort():
+            glob_result = glob.glob(mnturl)
+            glob_result.sort()
+            for url_to_mount in glob_result:
                 # Add file: 
                 urls_to_mount.append(fixup_url(url_to_mount))
+            del glob_result
         else:
             urls_to_mount = [mnturl]
 
