@@ -646,7 +646,7 @@ class HiveFileParser:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
             return
 
-        backend = "hive"
+        backend = "hivefile"
         backend_args = ""
         for o, a in opts:
             if o == "-t":
@@ -679,7 +679,7 @@ class HiveFileParser:
             urls_to_mount = [mnturl]
 
         for mount_url in urls_to_mount:
-            if backend == "hive":
+            if backend == "hivefile":
                 self.parse(mount_url, curfolder)
 
             elif backend == "filesystem": # FIXME: Separate function/module/library
