@@ -22,7 +22,7 @@ the HiveConfig namespace. Sections contain parameters.
 
 Parameters
 ----------
-Parameters have the form m
+Parameters have the form
 
     name = value
 
