@@ -17,7 +17,7 @@ Sections
 --------
 A section begins with the name of the section in square brackets and
 continues until the next section begins. Sections defines "Folders" in
-the HiveConfig namespace. Sections contain parameters.
+the Hiveconfig namespace. Sections contain parameters.
 
 
 Parameters

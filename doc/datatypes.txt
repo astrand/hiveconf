@@ -1,5 +1,5 @@
 
-Supported data types in HiveConf
+Supported data types in Hiveconf
 ================================
 
 Primitive data types
