@@ -33,8 +33,25 @@ class DebugWriter:
         if self.debug:
             sys.stderr.write(data)
 
-debugw = DebugWriter(debug=1)
+debugw = DebugWriter(debug=0)
 
+
+class IndentPrinter:
+    def __init__(self):
+        self.indent = 0
+        self.line_indented = 0
+
+    def write(self, data):
+        if self.indent and not self.line_indented:
+            sys.stderr.write(" " * self.indent)
+            self.line_indented = 1
+        sys.stderr.write(data)
+        if data.find("\n") != -1:
+            self.line_indented = 0
+
+    def change(self, val):
+        self.indent += val
+        
 
 class Error(Exception): pass
 class NoSuchKeyError(Error): pass
@@ -113,6 +130,8 @@ class Folder(NamespaceObject):
         ["global", "settings", "background"]
         Returns None if object is not found. 
         """
+        print >>debugw, "_lookup_list with components:", repr(comps)
+        
         first_comp = comps[0]
         rest_comps = comps[1:] 
         
@@ -127,12 +146,23 @@ class Folder(NamespaceObject):
             return obj
         else:
             # Recursive call with rest of component list
-            if type(obj) != Folder:
+            if not isinstance(obj, Folder):
                 raise ObjectExistsError
             
             return obj._lookup_list(rest_comps, autocreate)
 
-            
+    def walk(self, indent=None):
+        if not indent:
+            indent = IndentPrinter()
+        
+        print >>indent, "Parameters:", self.parameters.keys()
+        for (foldername, folder) in self.folders.items():
+            print >>indent, "Folder:", foldername
+            indent.change(4)
+            folder.walk(indent)
+            indent.change(-4)
+
+
     def get_string(self, key):
         # Hämta ett parametervärde, relativt en folder. 
         # Implementation:  dela upp "key" i komponenter. Utgå ifrån
