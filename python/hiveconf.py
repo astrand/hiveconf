@@ -79,7 +79,7 @@ class SyntaxError(Error):
         return "Bad line %d" % self.linenum
 
 #
-# Utils
+# Utility functions
 #
 
 def path2comps(path):
@@ -99,6 +99,18 @@ def comps2path(comps):
         result += "/" + component
     return result
 
+def fixup_url(url):
+    """Change url slightly, so that urllib can be used for POSIX paths"""
+    (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
+    if not scheme:
+        scheme = "file"
+
+    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+
+
+#
+# End of utility functions
+#
 
 class NamespaceObject:
     pass
@@ -399,17 +411,6 @@ class Folder(NamespaceObject):
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
-
-
-def fixup_url(url):
-    """Change url slightly, so that urllib can be used for POSIX paths"""
-    (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
-    if not scheme:
-        scheme = "file"
-
-    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
-
-
 
 
 def open_hive(url):
