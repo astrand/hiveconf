@@ -2,7 +2,8 @@
 Supported data types in HiveConf
 ================================
 
-Primitive data types:
+Primitive data types
+--------------------
 
 * Boolean
 
@@ -13,8 +14,53 @@ Primitive data types:
 * Binary data
 
 
-Compound data types:
+Compound data types
+-------------------
 
 * Lists of the above primitive data types. All values in a list must
   have the same primitive type.
+
+
+String representation of data types. Details. 
+---------------------------------------------
+Each data type has a string representation, which is used in hive
+configuration files. The details are described below. 
+
+* Boolean
+
+  The preferred boolean string representation is true/false, but
+  yes/no and 1/0 are also accepted. Case is not significant. 
+
+  Note that when a hive configuration is re-written, yes/no and 1/0
+  will be changed to true/false. 
+
+
+* Integers
+
+  Integers are limited to 32 bits, and can be positive or
+  negative. The largest positive integer is 2147483647, and the
+  smallest negative integer is -2147483648. 
+
+
+* Floats
+
+  The allowed range of floating point values is
+  implementation-dependent. Some examples of floating point values:
+
+  3.14    10.    .001    1e100    3.14e-10    0e0
+
+
+* Binary data
+
+  The maximum recommended size of binary data for each parameter is
+  4096 bytes. Binary data are "hex encoded" in hive configuration
+  files, that is, each octet is described with its hexadecimal ASCII
+  value. Example: "Hive" is encoded as 48697665
+
+
+* Lists
+
+  List items are separated by whitespace. Example:
+
+  10.0.0.1 10.0.0.2  192.168.10.1
 
