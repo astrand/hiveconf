@@ -3,3 +3,28 @@ http://util.openoffice.org/common/configuration/configuration_schema.html
 
 http://developer.gnome.org/doc/API/2.0/gconf/index.html
 
+http://www.freesoftware.fsf.org/cfl/
+
+http://www.nongnu.org/gdsl/
+
+http://h4.locked.org/x/config_api.html
+
+http://www.azzit.de/dotconf/
+
+http://kempelen.iit.bme.hu/~mszeredi/keeper/keeper.html
+
+http://www.platon.sk/projects/libcfg+/
+
+http://www.gubbe.ch/code/libcfgparse.php
+
+http://www.e.kth.se/~e97_mhe/confuse.shtml
+
+http://hq.alert.sk/projects/nconfig/
+
+http://www.ossp.org/pkg/lib/cfg/
+
+http://prj.softpixel.com/spconfig/
+
+http://freshmeat.net/projects/sxml/
+
+
