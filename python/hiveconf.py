@@ -345,6 +345,12 @@ class Folder(NamespaceObject):
 
             folder._addobject(Parameter(new_value, source,
                                         sectionname, paramname), paramname)
+            # Write new parameter to disk
+            # This should be done by parsing the folders write_target file
+            # and fins the correct section, and then add this parameter just
+            # below the section line.
+            # FIXME
+            
         else:
             # Update existing parameter
             param.set_string(new_value)
