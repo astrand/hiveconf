@@ -1,0 +1,20 @@
+#
+# Detta är en testhive
+#
+
+key1=data1
+
+[global]
+key2=data2
+
+#[%global]
+#foo=bar
+
+
+# Note: The beginning slash is not necessary!
+[/security]
+sec1=sec2
+
+[foppa]
+d=a
+
