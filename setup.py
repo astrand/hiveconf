@@ -14,8 +14,9 @@ setup (name = "hiveconf",
        author = "Peter Astrand",
        author_email = "peter@cendio.se",
        url = "http://www.cendio.se/~peter/hiveconf",
+       package_dir = {'': 'python'},
        py_modules = ["hiveconf"],
-       data_files=[('/usr/bin', ['hivetool']),
+       data_files=[('/usr/bin', ['python/hivetool']),
                    ('/etc', ['etc/root.hconf']),
                    ('/etc/hiveconf.d', ["etc/hiveconf.d/kde.hconf", "etc/hiveconf.d/samba.hconf"])
                    ]

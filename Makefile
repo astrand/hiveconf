@@ -1,4 +1,5 @@
 
+.PHONY: dist default all install rpm
 
 default: all
 
@@ -11,3 +12,6 @@ install:
 
 rpm: 
 	./setup.py bdist_rpm
+
+dist:
+	./setup.py sdist
