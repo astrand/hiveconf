@@ -1,9 +1,11 @@
 
 Overview
 --------
-The file consists of sections, parameters, and directives. The file
-is line-based - that is, each newline-terminated line represents
-either a comment, a section name or a parameter.
+This file describes the "hivefile" backend and file format. 
+
+The file consists of sections, parameters, and directives. The file is
+line-based - that is, each newline-terminated line represents either a
+comment, a section name or a parameter.
 
 Section, parameter names, and directives are not case sensitive.
 
@@ -53,15 +55,14 @@ Directives
 
     The following options are supported:
 
-    -t <format> 
-      The argument following the -t is used to indicate the file
-      format. The file formats currently supported are:
+    -t <backend> 
+      The argument following the -t is used to indicate the backend to use. 
+      The backends currently supported are:
 
-      hive: The hive file format (default). The hive file format is
-      described in this file. 
+      hivefile: The hive file backend (default). The hive file format
+      is described in this file.
 
-      parameter: A file containing a single parameter value. For
-      details, see parameter-files.txt. 
+      filesystem: See filesystem-backend.txt. 
 
     -o <options>
       Generic mount options:
@@ -70,5 +71,5 @@ Directives
         rw: Mount read-write
 
     -a <options>
-      File format specific options. See format documentation for
-      details. The hive file format has no options, currently. 
+      Backend specific options. See backend documentation for
+      details. The hivefile backend format has no options, currently. 
