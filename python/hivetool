@@ -42,9 +42,15 @@ def handle_param(hive, param):
     if not value:
         # Display value
         method = getattr(hive, "get_%s" % paramtype)
-        value = method(parampath)
+        try:
+            value = method(parampath)
+        except hiveconf.NotAParameterError:
+            print >>sys.stderr, "%s: Not a parameter" % parampath
+            return
+            
         if value == None:
             print >>sys.stderr, "%s: No such parameter" % parampath
+            return
         else:
             print value
     else:
@@ -132,9 +138,13 @@ def main():
     for foldername in walk_folders:
         folder = hive.lookup(foldername)
         if not folder:
-            print >>sys.stderr, "Folder '%s' not found" % foldername
+            print >>sys.stderr, "%s: Folder not found" % foldername
             continue
 
+        if not isinstance(folder, hiveconf.Folder):
+            print >>sys.stderr, "%s: not a folder" % foldername
+            continue
+        
         folder.walk(recursive)
 
 
