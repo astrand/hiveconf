@@ -152,3 +152,11 @@ folder. If recursive is false, only print the contents of the current
 folder. 
 
 
+get_folders()
+
+Get folder names in this folder. 
+
+
+get_parameters()
+
+Get parameter names in this folder. 
