@@ -175,12 +175,7 @@ class Folder(NamespaceObject):
 
 
     def get_string(self, key):
-        # Hämta ett parametervärde, relativt en folder. 
-        # Implementation:  dela upp "key" i komponenter. Utgå ifrån
-        # "folder" och sök upp parameter-objektet. Hämta värdet från parametern via
-        # parameter.get().
-        pass
-
+        return self.lookup(key).get_string()
 
 
 def open_hive(filename):
