@@ -266,8 +266,15 @@ class Folder(NamespaceObject):
         #
         # So, we need to test if the source files are writable.
 
-        self.source = source
+        # List of URLs that has contributed to this Folder.
+        self.sources = []
         self.write_target = write_target
+
+        self.update(source)
+
+    def update(self, source):
+        if source:
+            self.sources.append(source)
 
     def addobject(self, obj, objname):
         if self.exists(objname):
@@ -319,13 +326,13 @@ class Folder(NamespaceObject):
             # Update existing parameter
             param.set_string(new_value)
 
-    def lookup(self, objpath, autocreate=0, source=None):
+    def lookup(self, objpath):
         """Lookup an object. objname is like global/settings/background
         Returns None if object is not found."""
         comps = path2comps(objpath)
-        return self._lookup_list(comps, autocreate, source)
+        return self._lookup_list(comps)
 
-    def _lookup_list(self, comps, autocreate=0, source=None):
+    def _lookup_list(self, comps):
         """Lookup an object. comps is like
         ["global", "settings", "background"]
         Returns None if object is not found. 
@@ -337,16 +344,7 @@ class Folder(NamespaceObject):
         
         obj = self.get(first_comp)
         if not obj:
-            if autocreate:
-                # Create folder
-                if len(comps) == 1:
-                    obj = Folder(source, source)
-                else:
-                    obj = Folder(None, self.write_target)
-                    
-                self.addobject(obj, first_comp)
-            else:
-                return
+            return
 
         if len(comps) == 1:
             # Last step in recursion
@@ -356,7 +354,7 @@ class Folder(NamespaceObject):
             if not isinstance(obj, Folder):
                 raise ObjectExistsError
             
-            return obj._lookup_list(rest_comps, autocreate, source)
+            return obj._lookup_list(rest_comps)
 
     def walk(self, indent=None):
         if not indent:
@@ -369,7 +367,7 @@ class Folder(NamespaceObject):
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
             print >>indent, foldername + "/",
-            print " (source:%s, write_target:%s)" % (folder.source, folder.write_target)
+            print " (sources:%s, write_target:%s)" % (folder.sources, folder.write_target)
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
@@ -415,7 +413,7 @@ def open_hive(url, rootfolder=None):
 
             sectionname = line[1:-1]
             print >>debugw, "Read section line", sectionname
-            curfolder = rootfolder.lookup(sectionname, autocreate=1, source=url)
+            curfolder = handle_section(rootfolder, sectionname, url)
             
         elif line.startswith("%"):
             # Directive
@@ -440,6 +438,46 @@ def open_hive(url, rootfolder=None):
             raise SyntaxError(linenum)
 
     return rootfolder
+
+
+def handle_section(rootfolder, sectionname, source):
+    print >>debugw, "handle_section for section", sectionname
+    comps = path2comps(sectionname)
+
+    folder = rootfolder._lookup_list(comps)
+    if folder:
+        # Folder already exists. Update with new information. 
+        folder.update(source)
+    else:
+        folder = _create_folders(rootfolder, comps, source)
+
+    return folder
+
+
+def _create_folders(folder, comps, source):
+    first_comp = comps[0]
+    rest_comps = comps[1:] 
+        
+    obj = folder.get(first_comp)
+    if not obj:
+        # Create folder
+        if len(comps) == 1:
+            # last step
+            obj = Folder(source, source)
+        else:
+            obj = Folder(None, folder.write_target)
+
+        folder.addobject(obj, first_comp)
+
+    if len(comps) == 1:
+        # Last step in recursion
+        return obj
+    else:
+        # Recursive call with rest of component list
+        if not isinstance(obj, Folder):
+            raise ObjectExistsError
+
+        return _create_folders(obj, rest_comps, source)
 
 
 def mount_directive(args, curfolder, url, linenum):
