@@ -61,6 +61,7 @@ class IndentPrinter:
 class Error(Exception): pass
 class NoSuchParameterError(Error): pass
 class NoSuchFolderError(Error): pass
+class NoSuchObjectError(Error): pass
 class ObjectExistsError(Error): pass
 class InvalidObjectError(Error): pass
 class BadBoolFormat(Error): pass
@@ -85,6 +86,10 @@ def path2comps(path):
     # Remove first slash
     if path[0] == "/":
         path = path[1:]
+
+    # Remove last slash
+    if path[-1] == "/":
+        path = path[:-1]
     
     return path.split("/")
 
@@ -266,6 +271,24 @@ class Folder(NamespaceObject):
     def exists(self, objname):
         return self.folders.has_key(objname) or self.parameters.has_key(objname)
 
+    # FIXME: Remove?
+    def get_string(self, objpath):
+        return self.lookup(objpath).get_string()
+
+    # FIXME: Correct place?
+    def set_string(self, objpath, new_value):
+        comps = path2comps(objpath)
+        folder = self._lookup_list(comps[:-1], autocreate=1)
+        paramname = comps[-1]
+        param = folder.lookup(paramname)
+        if not param:
+            # Add new parameter
+            # FIXME
+            folder.addobject(Parameter(new_value, "", "", paramname), paramname)
+        else:
+            # Update existing parameter
+            param.set_string(new_value)
+
     def lookup(self, objpath, autocreate=0):
         """Lookup an object. objname is like global/settings/background
         Returns None if object is not found."""
@@ -283,10 +306,13 @@ class Folder(NamespaceObject):
         rest_comps = comps[1:] 
         
         obj = self.get(first_comp)
-        if not obj and autocreate:
-            # Create folder
-            obj = Folder()
-            self.addobject(obj, first_comp)
+        if not obj:
+            if autocreate:
+                # Create folder
+                obj = Folder()
+                self.addobject(obj, first_comp)
+            else:
+                return
 
         if len(comps) == 1:
             # Last step in recursion
