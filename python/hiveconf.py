@@ -1,6 +1,5 @@
 #
-# Copyright (C) 2003 by Cendio Systems
-# Author: Peter Astrand <peter@cendio.se>
+# Copyright (C) 2003 Peter Astrand <peter@cendio.se>
 # 
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation
@@ -672,7 +671,7 @@ class HiveFileParser:
             # Glob local files
             urls_to_mount =[]
             # FIXME: Warn if no files found?
-            for url_to_mount in glob.glob(mnturl):
+            for url_to_mount in glob.glob(mnturl).sort():
                 # Add file: 
                 urls_to_mount.append(fixup_url(url_to_mount))
         else:
