@@ -28,6 +28,7 @@ import urlparse
 import os
 import string
 import glob
+import getopt
 
 class DebugWriter:
     def __init__(self, debug):
@@ -380,13 +381,28 @@ def open_hive(url, rootfolder=None):
 
 
 def mount_directive(args, curfolder, url, linenum):
+    try:
+        opts, args = getopt.getopt(args, "t:")
+    except getopt.GetoptError:
+        print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
+        return
+
+    format = "hive"
+    for o, a in opts:
+        if o == "-t":
+            format = a
+    
     if not len(args) == 1:
         print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
         return
 
     # FIXME: Only glob for file URLs. 
     for mount_url in glob.glob(args[0]):
-        open_hive(mount_url, curfolder) 
+        if format == "hive":
+            open_hive(mount_url, curfolder)
+        else:
+            print >> sys.stderr, "%s: line %d: unsupported format" % (url, linenum)
+            continue
         
 
 class ParamUpdater:
