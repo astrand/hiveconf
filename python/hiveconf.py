@@ -172,24 +172,27 @@ class Parameter(NamespaceObject):
         """Add a new parameter to the backend"""
         if not self.write_target:
             print >>debugw, "_be_add_param(%s): no write_target" % self.paramname
-            return
+            return 0
         
         hfu = _HiveFileUpdater(self.write_target)
         hfu.add_parameter(self.sectionname, self.paramname, self._value)
+        return 1
 
     def _be_change_param(self):
         """Change the value of a existing parameter in the backend"""
         if not self.write_target:
             print >>debugw, "_be_change_param(%s): no write_target" % self.paramname
-            return
+            return 0
         
         if self.source != self.write_target:
             # If we should write to another file than the parameter
             # was read from, we should add, not change
-            self._be_add_param()
+            return self._be_add_param()
         else:
             hfu = _HiveFileUpdater(self.write_target)
             hfu.change_parameter(self.sectionname, self.paramname, self._value)
+
+        return 1
 
     #
     # Primitive data types, get operations
@@ -467,41 +470,41 @@ class Folder(NamespaceObject):
             method(param, value)
             folder._addobject(param, paramname)
             # Write new parameter to disk
-            param._be_add_param()
+            return param._be_add_param()
         else:
             # Update existing parameter
             method(param, value)
-            param._be_change_param()
+            return param._be_change_param()
 
     def set_string(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_string)
+        return self._set_value(parampath, value, Parameter.set_string)
         
     def set_bool(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_bool)
+        return self._set_value(parampath, value, Parameter.set_bool)
         
     def set_integer(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_integer)
+        return self._set_value(parampath, value, Parameter.set_integer)
         
     def set_float(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_float)
+        return self._set_value(parampath, value, Parameter.set_float)
         
     def set_binary(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_binary)
+        return self._set_value(parampath, value, Parameter.set_binary)
         
     def set_string_list(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_string_list)
+        return self._set_value(parampath, value, Parameter.set_string_list)
 
     def set_bool_list(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_bool_list)
+        return self._set_value(parampath, value, Parameter.set_bool_list)
 
     def set_integer_list(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_integer_list)
+        return self._set_value(parampath, value, Parameter.set_integer_list)
 
     def set_float_list(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_float_list)
+        return self._set_value(parampath, value, Parameter.set_float_list)
 
     def set_binary_list(self, parampath, value):
-        self._set_value(parampath, value, Parameter.set_binary_list)
+        return self._set_value(parampath, value, Parameter.set_binary_list)
 
     def lookup(self, objpath, autocreate=0):
         """Lookup an object. objname is like global/settings/background
