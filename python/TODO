@@ -1,0 +1,43 @@
+
+* Methods for removing parameters and folders. 
+
+* Methods for asking which file a certain parameter resides in. 
+
+* GUI-editor, like Windows regedit och GConf gconf-editor. 
+
+* Filesystem backend should work with directory hiearchy, not just one
+  single parameter file. 
+
+* When using filesystem backend, the parameter name should default to
+  the file name, not "default". 
+
+* Preserve indentation for changed parameters. 
+
+* Add mechanism for overriding parameter values on command line. This
+  could, for example, be done by setting an environment
+  variable. Example:
+
+  HIVEPARAMS="/global/background=black" mozilla
+
+  Since environment variables are preserved across most exec() calls,
+  Hiveconf should reset the HIVEPARAMS variable, as soons as it is
+  read. This is because the parameter path is application relative;
+  not machine relative. 
+
+  We need to think about the case with mandatory settings as well; it
+  shouldn't be possible to override mandatory settings with this
+  command line mechanism. Two idéas:
+
+  1) Mark parameters read from the environmant with a special tag, and
+     introduce the new %noenviron directive, which resets alla these
+     parameters. 
+
+  2) Require that the environment is "mounted", just like other
+     backends. In this case, the environment could be mounted after
+     the mandatory hive. 
+
+* Unit testing. 
+
+* More examples. 
+
+* More backends. 
