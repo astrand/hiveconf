@@ -23,6 +23,9 @@
 # SOFTWARE.
 
 import sys
+import urllib2
+import urlparse
+import os
 
 class DebugWriter:
     def __init__(self, debug):
@@ -95,8 +98,10 @@ class NamespaceObject:
 class Parameter(NamespaceObject):
     # Innehåller textsträngsvärdet "value"; men oparsat, dvs ej försökt översätta till
     # någon speciell datatyp. 
-    def __init__(self, value):
+    def __init__(self, value, source):
         self.value = value
+        # URL that this parameter was read from
+        self.source = source
 
     #
     # Primitive data types
@@ -259,9 +264,20 @@ class Folder(NamespaceObject):
             indent.change(-4)
 
 
-def open_hive(filename):
+def fixup_url(url):
+    """Change url slightly, so that urllib can be used for POSIX paths"""
+    (scheme, netloc, path, query, fragment) = urlparse.urlsplit(url)
+    if not scheme:
+        scheme = "file"
+
+    return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
+
+
+def open_hive(url):
     """Open and parse a hive file. Returns a folder"""
-    file = open(filename)
+    url = fixup_url(url)
+    file = urllib2.urlopen(url)
+    
     rootfolder = Folder()
     curfolder = rootfolder
     linenum = 0
@@ -293,7 +309,7 @@ def open_hive(filename):
             paramname = paramname.strip()
             paramvalue = paramvalue.strip()
             print >>debugw, "Read parameter line", paramname
-            curfolder.addobject(Parameter(paramvalue), paramname)
+            curfolder.addobject(Parameter(paramvalue, url), paramname)
         else:
             raise SyntaxError(linenum)
 
