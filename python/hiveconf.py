@@ -127,6 +127,10 @@ class Parameter(NamespaceObject):
         # FIXME: The class probably shouldn't know about it's own name.
         self.paramname = paramname
 
+    def __repr__(self):
+        return "<Parameter: %s  value=%s  section=%s  source=%s>" \
+               % (self.paramname, self.value, self.sectionname, self.source)
+
     def _be_add_param(self):
         """Add a new parameter to the backend"""
         hfu = HiveFileUpdater(self.source)
@@ -310,6 +314,10 @@ class Folder(NamespaceObject):
         self.sectionname = sectionname
         self._update(source)
 
+    def __repr__(self):
+        return "<Folder: sources=%s  write_target=%s  sectionname=%s>" \
+               % (string.join(self.sources, ","), self.write_target, self.sectionname)
+
     def _update(self, source):
         if source:
             self.sources.append(source)
@@ -438,11 +446,17 @@ class Folder(NamespaceObject):
 
         # Print Parameters and values
         for (paramname, param) in self.parameters.items():
-            print >> indent, paramname, "=", param.get_string(), " (sectionname:%s)" % param.sectionname
+            if not debugw.debug:
+                print >> indent, paramname, "=", param.get_string()
+            else:
+                print >> indent, paramname, param
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
-            print >>indent, foldername + "/ (sources:%s, write_target:%s, sectionname:%s)" % (folder.sources, folder.write_target, folder.sectionname)
+            if not debugw.debug:
+                print >>indent, foldername + "/ "
+            else:
+                print >>indent, foldername + "/", str(folder)
             indent.change(4)
             folder.walk(indent)
             indent.change(-4)
