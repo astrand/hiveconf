@@ -1,3 +1,3 @@
 
-[/system/services/samba]
+[/services/samba]
 %mount /etc/samba/smb.conf
