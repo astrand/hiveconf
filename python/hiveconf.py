@@ -57,6 +57,12 @@ class NoSuchKeyError(Error): pass
 class NoSuchFolderError(Error): pass
 class ObjectExistsError(Error): pass
 class InvalidObjectError(Error): pass
+class BadBoolFormat(Error): pass
+class BadIntegerFormat(Error): pass
+class BadFloatFormat(Error): pass
+class BadBinaryFormat(Error): pass
+class BadListFormat(Error): pass
+    
 class SyntaxError(Error):
     def __init__(self, linenum):
         self.linenum = linenum
@@ -92,10 +98,90 @@ class Parameter(NamespaceObject):
     def __init__(self, value):
         self.value = value
 
+    #
+    # Primitive data types
+    #
     def get_string(self):
         """Get value as string"""
         return self.value
 
+    def get_bool(self):
+        """Get boolean value"""
+        try:
+            return self._string2bool(self.value)
+        except ValueError:
+            raise BadBoolFormat()
+    
+    def get_integer(self):
+        """Get integer value"""
+        try:
+            return int(self.value)
+        except ValueError:
+            raise BadIntegerFormat()
+
+    def get_float(self):
+        """Get float value"""
+        try:
+            return float(self.value)
+        except ValueError:
+            raise BadFloatFormat()
+
+    def get_binary(self):
+        """Get binary value"""
+        try:
+            self._hexascii2string(self.value)
+        except ValueError:
+            raise BadBinaryFormat()
+
+    #
+    # Compound data types
+    #
+    def get_string_list(self):
+        return self.value.split()
+
+    def get_bool_list(self):
+        return map(self._string2bool, self.value.split())
+
+    def get_integer_list(self):
+        return map(int, self.value.split())
+
+    def get_float_list(self):
+        return map(float, self.value.split())
+
+    def get_binary_list(self):
+        return map(self._hexascii2string, self.value.split())
+        
+    def _string2hexascii(self, s):
+        """Convert string to hexascii"""
+        result = ""
+        for char in s:
+            result += "%02x" % ord(char)
+            return result
+
+    def _hexascii2string(self, s):
+        """Convert hexascii to string"""
+        result = ""
+        for x in range(len(s)/2):
+            pair = s[x*2:x*2+2]
+            val = int(pair, 16)
+            result += chr(val)
+            
+        return result
+
+    def _string2bool(self, s):
+        lcase = s.lower()
+        if lcase == "true" \
+           or lcase == "yes" \
+           or lcase == "1":
+            return 1
+        elif lcase == "false" \
+             or lcase == "no" \
+             or lcase == "0":
+            return 0
+        else:
+            raise ValueError()
+        
+            
 
 class Folder(NamespaceObject):
     """A folder. Does not contain the name of the folder itself."""
@@ -173,10 +259,6 @@ class Folder(NamespaceObject):
             indent.change(-4)
 
 
-    def get_string(self, key):
-        return self.lookup(key).get_string()
-
-
 def open_hive(filename):
     """Open and parse a hive file. Returns a folder"""
     file = open(filename)
@@ -208,6 +290,8 @@ def open_hive(filename):
         elif line.find("=") != -1:
             # Parameter
             (paramname, paramvalue) = line.split("=")
+            paramname = paramname.strip()
+            paramvalue = paramvalue.strip()
             print >>debugw, "Read parameter line", paramname
             curfolder.addobject(Parameter(paramvalue), paramname)
         else:
