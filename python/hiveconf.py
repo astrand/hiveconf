@@ -555,7 +555,10 @@ class HiveFileParser:
                 paramname = paramname.strip()
                 paramvalue = paramvalue.strip()
                 print >>debugw, "Read parameter line", paramname
-                curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
+                try:
+                    curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname), paramname)
+                except ObjectExistsError:
+                    print >>debugw, "Object '%s' already exists" % paramname
             else:
                 raise SyntaxError(linenum)
 
@@ -631,7 +634,8 @@ class HiveFileParser:
             print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
             return
 
-        # FIXME: Only glob for file URLs. 
+        # FIXME: Only glob for file URLs.
+        # FIXME: Warn if no file if found?
         for mount_url in glob.glob(args[0]):
             if format == "hive":
                 self.parse(mount_url, curfolder)
