@@ -462,7 +462,13 @@ def _create_folders(folder, comps, source):
         # Create folder
         if len(comps) == 1:
             # last step
-            obj = Folder(source, source)
+            if not source:
+                # If no source, inherit
+                write_target = folder.write_target
+            else:
+                write_target = source
+            
+            obj = Folder(source, write_target)
         else:
             obj = Folder(None, folder.write_target)
 
