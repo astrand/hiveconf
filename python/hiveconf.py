@@ -352,7 +352,9 @@ class Folder(NamespaceObject):
             self._update_write_target(source)
 
     def _update_write_target(self, write_target):
-        if not self.write_target and _check_write_access(write_target):
+        if not self.write_target \
+               and write_target \
+               and _check_write_access(write_target):
             self.write_target = write_target
 
     def _be_write_section(self):
