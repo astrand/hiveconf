@@ -64,6 +64,7 @@ class NoSuchFolderError(Error): pass
 class NoSuchObjectError(Error): pass
 class ObjectExistsError(Error): pass
 class InvalidObjectError(Error): pass
+class NotAParameterError(Error): pass
 class BadBoolFormat(Error): pass
 class BadIntegerFormat(Error): pass
 class BadFloatFormat(Error): pass
@@ -333,6 +334,10 @@ class Folder(NamespaceObject):
     #
     def _get_value(self, parampath, method):
         param = self.lookup(parampath)
+        # Check if param really is a Parameter
+        if not isinstance(param, Parameter):
+            raise NotAParameterError()
+        
         if not param:
             return None
         else:
