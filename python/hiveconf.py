@@ -84,10 +84,14 @@ class SyntaxError(Error):
 #
 
 def path2comps(path):
+    # Special case: root folder
+    if path == "/":
+        return ["/"]
+
     # Remove first slash
     if path.startswith("/"):
         path = path[1:]
-
+    
     # Remove last slash
     if path.endswith("/"):
         path = path[:-1]
@@ -494,6 +498,9 @@ class Folder(NamespaceObject):
 
         # Print Foldernames and their contents
         for (foldername, folder) in self.folders.items():
+            if foldername == "/":
+                continue
+            
             if not debugw.debug:
                 print >>indent, foldername + "/ "
             else:
@@ -523,6 +530,7 @@ class HiveFileParser:
 
         if not rootfolder:
             rootfolder = Folder(url, url, "/")
+            rootfolder._addobject(rootfolder, "/")
         curfolder = rootfolder
         linenum = 0
         sectionname = ""
