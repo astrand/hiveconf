@@ -390,7 +390,11 @@ class Folder(NamespaceObject):
     #
     def _set_value(self, parampath, value, method):
         comps = _path2comps(parampath)
-        folder = self._lookup_list(comps[:-1], autocreate=1) 
+        folder_comps = comps[:-1]
+        if folder_comps:
+            folder = self._lookup_list(folder_comps, autocreate=1)
+        else:
+            folder = self
         paramname = comps[-1]
         param = folder.lookup(paramname)
         if not param:
