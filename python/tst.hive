@@ -1,20 +1,38 @@
 #
-# Detta är en testhive
+# Test Hive, based on Sambas smb.conf
 #
 
-key1=data1
+# Toplevel parameter
+toplevel_param1=toplevel_value1 
 
-[global]
-key2=data2
-
-#[%global]
-#foo=bar
+# Whitespace below and above
 
 
-# Note: The beginning slash is not necessary!
-[/security]
-sec1=sec2
+# First level folder
+[globals] 
+# String
+workgroup = MYWORKGROUP
+# Integer, parameter name with spaces
+max log size = 50
+# Float value
+deadtime = 10.2
+# Binary data ("GNU University")
+server string = 474e5520556e6976657273697479
+# List of bools
+boolean_list = yes no yes
+# List of integers
+integer_list = 110 90 22
+# List of floats
+float_list = 1.0 3.14 1e100
+# List of strings
+interfaces = eth0 192.168.2.10/24 192.168.3.10/255.255.255.0
+# List of binary data
+hostkeys = 474e5520556e6976657273697479 484e5520556e6976657273697479
 
-[foppa]
-d=a
+
+# Second level folder
+[shares/tmp] 
+
+# Boolean 
+public = yes 
 
