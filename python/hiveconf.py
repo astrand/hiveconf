@@ -485,7 +485,7 @@ class Folder(NamespaceObject):
             
             return obj._lookup_list(rest_comps, autocreate, sectionname)
 
-    def walk(self, indent=None):
+    def walk(self, recursive=1, indent=None):
         if not indent:
             indent = IndentPrinter()
 
@@ -506,7 +506,8 @@ class Folder(NamespaceObject):
             else:
                 print >>indent, foldername + "/", str(folder)
             indent.change(4)
-            folder.walk(indent)
+            if recursive:
+                folder.walk(recursive, indent)
             indent.change(-4)
 
 
