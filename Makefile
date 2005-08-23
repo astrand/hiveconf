@@ -11,7 +11,7 @@ install:
 	./create_pth.sh
 
 rpm: 
-	./setup.py bdist_rpm --release=6
+	./setup.py bdist_rpm --release=7
 
 dist:
 # We distribute a .spec file, so that it's possible to run "rpm -ta hiveconf.tgz"
