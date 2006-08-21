@@ -71,11 +71,12 @@ class ReadOnlySource(Error): pass
 class FolderNotEmpty(Error): pass
     
 class SyntaxError(Error):
-    def __init__(self, linenum):
+    def __init__(self, url, linenum):
+        self.url = url
         self.linenum = linenum
 
     def __str__(self):
-        return "Bad line %d" % self.linenum
+        return "Bad line %d in %s" % (self.linenum, self.url)
 
 #
 # Utility functions
@@ -714,7 +715,7 @@ class _HiveFileParser:
                 except ObjectExistsError:
                     print >>debugw, "Object '%s' already exists" % paramname
             else:
-                raise SyntaxError(linenum)
+                raise SyntaxError(url, linenum)
 
         return rootfolder
 
