@@ -127,9 +127,11 @@ def main():
         method = getattr(hive, "get_%s" % paramtype)
         value = method(parampath)
         if value:
-            print '%s="%s"' % (varname, value)
+            # ' is the only character that needs special handling
+            value = value.replace("'", "'\\''")
+            print "%s='%s'" % (varname, value)
         else:
-            print '%s=""' % varname
+            print "%s=''" % varname
 
     # Get/set listed parameters
     for param in args:
