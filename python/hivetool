@@ -72,8 +72,8 @@ hivetool [options] [type:]parameter[=value] ...
   -v,--version		  Print version
   -?,--help		  Show this help message
 
-  type is one of: string, bool, integer, float, binary, stringlist,
-  boollist, integerlist, floatlist, binarylist. Default is string
+  type is one of: string, bool, integer, float, binary, string_list,
+  bool_list, integer_list, float_list, binary_list. Default is string
 
   Example:
 
@@ -127,6 +127,7 @@ def main():
         method = getattr(hive, "get_%s" % paramtype)
         value = method(parampath)
         if value:
+            value = str(value)
             # ' is the only character that needs special handling
             value = value.replace("'", "'\\''")
             print "%s='%s'" % (varname, value)
