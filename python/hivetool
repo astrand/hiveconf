@@ -132,6 +132,8 @@ def main():
         (paramtype, parampath) = get_type(param)
         method = getattr(hive, "get_%s" % paramtype)
         value = method(parampath)
+        if value == None:
+            errors += 1
         if value:
             value = str(value)
             # ' is the only character that needs special handling
