@@ -36,6 +36,7 @@ def get_value(s):
 
 
 def handle_param(hive, param):
+    """Print parameter. Returns zero on success"""
     (paramtype, param) = get_type(param)
     (parampath, value) = get_value(param)
 
@@ -46,11 +47,11 @@ def handle_param(hive, param):
             value = method(parampath)
         except hiveconf.NotAParameterError:
             print >>sys.stderr, "%s: Not a parameter" % parampath
-            return
+            return 1
             
         if value == None:
             print >>sys.stderr, "%s: No such parameter" % parampath
-            return
+            return 1
         else:
             print value
     else:
@@ -58,6 +59,9 @@ def handle_param(hive, param):
         method = getattr(hive, "set_%s" % paramtype)
         if not method(parampath, value):
             print >>sys.stderr, "Failed to set parameter", parampath
+            return 1
+    return 0
+    
 
 
 def usage():
@@ -118,6 +122,8 @@ def main():
             usage()
             sys.exit(0)
 
+    errors = 0
+
     # Try to open root hive
     hive = hiveconf.open_hive(roothive)
 
@@ -136,7 +142,7 @@ def main():
 
     # Get/set listed parameters
     for param in args:
-        handle_param(hive, param)
+        errors += handle_param(hive, param)
 
     # Walk
     for foldername in walk_folders:
@@ -151,6 +157,7 @@ def main():
         
         folder.walk(recursive)
 
+    sys.exit(errors)
 
 if __name__ == "__main__":
     main()
