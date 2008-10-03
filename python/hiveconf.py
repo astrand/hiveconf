@@ -744,18 +744,19 @@ class _HiveFileParser:
         obj = folder._get_object(obj_name)
         if not obj:
             # Create folder
+            # If we have a source file and it's writable, make this
+            # the write_target. Otherwise, inherit. 
+            if source and _check_write_access(source):
+                write_target = source
+            else:
+                write_target = folder.write_target
+
             if len(comps) == 1:
                 # last step
-                # If we have a source file and it's writable, make this
-                # the write_target. Otherwise, inherit. 
-                if source and _check_write_access(source):
-                    write_target = source
-                else:
-                    write_target = folder.write_target
                 obj = Folder(source, write_target, sectionname)
             else:
-                obj = Folder(None, folder.write_target, sectionname)
-
+                obj = Folder(None, write_target, sectionname)
+                
             folder._addobject(obj, obj_name)
 
         if len(comps) == 1:
