@@ -1,1 +1,1 @@
-/usr/lib/hiveconf/setup.sh 2>/dev/null
+/usr/lib/hiveconf/setup.sh >/dev/null
