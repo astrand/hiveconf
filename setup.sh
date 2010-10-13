@@ -1,5 +1,8 @@
 #!/bin/sh
 
+[ -h "$0" ] && ORIGIN=`ls -l "$0" | sed "s/.*-> //g"` || ORIGIN="$0"
+ORIGIN=`(cd "\`dirname \"$ORIGIN\"\`"; pwd -P 2>/dev/null || pwd)`
+
 last_working=""
 
 # Create .pth files
@@ -8,7 +11,7 @@ for binary in python2 python2.2 python2.3 python2.4 python2.5 python2.6 python _
         last_working=${binary}
         ${binary} - <<EOF
 pthfile="hiveconf.pth"
-mod_dir="/usr/lib/hiveconf"
+mod_dir="${ORIGIN}"
 import sys, os
 sitedirs = filter(lambda s: s.endswith("site-packages") or s.endswith("dist-packages"), sys.path)
 if len(sitedirs) < 1:
