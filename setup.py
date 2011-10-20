@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 DESCRIPTION = """\
 hiveconf is a configuration framework
@@ -7,13 +7,13 @@ hiveconf is a configuration framework
 from distutils.core import setup
 
 setup (name = "hiveconf",
-       version = "0.4",
+       version = "0.5",
        license = "LGPL",
        description = "configuration framework",
        long_description = DESCRIPTION,
        author = "Peter Astrand",
-       author_email = "peter@cendio.se",
-       url = "http://www.cendio.se/~peter/hiveconf",
+       author_email = "astrand@cendio.se",
+       url = "http://www.lysator.liu.se/~astrand/projects/hiveconf/",
        package_dir = {'': 'python'},
        py_modules = ["hiveconf"],
        data_files=[('/usr/bin', ['python/hivetool']),
