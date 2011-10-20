@@ -69,8 +69,6 @@ def eval_print(hive, varname, param, export):
     value = method(parampath)
     if export:
         print "export",
-    if value == None:
-        errors += 1
     if value:
         value = str(value)
         # ' is the only character that needs special handling
@@ -78,6 +76,10 @@ def eval_print(hive, varname, param, export):
         print "%s='%s'" % (varname, value)
     else:
         print "%s=''" % varname
+    if value == None:
+        return 1
+    else:
+        return 0
 
 
 def usage():
@@ -152,14 +154,14 @@ def main():
 
     # Handle -e parameters
     for (varname, param) in e_params:
-        eval_print(hive, varname, param, eval_export)
+        errors += eval_print(hive, varname, param, eval_export)
 
     # Handle -E
     for foldername in E_params:
         folder = hive.lookup(foldername)
         params = hive.get_parameters(foldername)
         for param in params:
-            eval_print(folder, param, param, eval_export)
+            errors += eval_print(folder, param, param, eval_export)
 
     # Get/set listed parameters
     for param in args:
