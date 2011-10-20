@@ -61,7 +61,23 @@ def handle_param(hive, param):
             print >>sys.stderr, "Failed to set parameter", parampath
             return 1
     return 0
-    
+
+
+def eval_print(hive, varname, param, export):
+    (paramtype, parampath) = get_type(param)
+    method = getattr(hive, "get_%s" % paramtype)
+    value = method(parampath)
+    if export:
+        print "export",
+    if value == None:
+        errors += 1
+    if value:
+        value = str(value)
+        # ' is the only character that needs special handling
+        value = value.replace("'", "'\\''")
+        print "%s='%s'" % (varname, value)
+    else:
+        print "%s=''" % varname
 
 
 def usage():
@@ -73,7 +89,9 @@ hivetool [options] [type:]parameter[=value] ...
   -r,--root <file>	  Specify root hive file. Default is /etc/root.hconf
   -e,--eval VAR=parameter Print parameter value in format suitable for
                           assignment to shell variable, via evaluation
+  -E folder               As -e, but print all parameters in specified folder
   -v,--version		  Print version
+  -x,--export             When using -e,-E, export variables
   -?,--help		  Show this help message
 
   type is one of: string, bool, integer, float, binary, string_list,
@@ -90,9 +108,9 @@ hivetool [options] [type:]parameter[=value] ...
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "a:Rr:ve:?",
+        opts, args = getopt.getopt(sys.argv[1:], "a:Rr:ve:E:x?",
                                    ["all-entries=", "recursive", "root=", "version", "help",
-                                    "eval="])
+                                    "eval=", "export"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -101,6 +119,8 @@ def main():
     walk_folders = []
     recursive = 0
     e_params =[]
+    E_params = []
+    eval_export = 0 
     for o, a in opts:
         if o in ("-a", "--all-entries"):
             walk_folders.append(a)
@@ -117,7 +137,10 @@ def main():
                 usage()
                 sys.exit(2)
             e_params.append(words)
-            
+        if o in ("-E",):
+            E_params.append(a)
+        if o in ("-x", "--export"):
+            eval_export = 1
         if o in ("-?", "--help"):
             usage()
             sys.exit(0)
@@ -129,18 +152,14 @@ def main():
 
     # Handle -e parameters
     for (varname, param) in e_params:
-        (paramtype, parampath) = get_type(param)
-        method = getattr(hive, "get_%s" % paramtype)
-        value = method(parampath)
-        if value == None:
-            errors += 1
-        if value:
-            value = str(value)
-            # ' is the only character that needs special handling
-            value = value.replace("'", "'\\''")
-            print "%s='%s'" % (varname, value)
-        else:
-            print "%s=''" % varname
+        eval_print(hive, varname, param, eval_export)
+
+    # Handle -E
+    for foldername in E_params:
+        folder = hive.lookup(foldername)
+        params = hive.get_parameters(foldername)
+        for param in params:
+            eval_print(folder, param, param, eval_export)
 
     # Get/set listed parameters
     for param in args:
