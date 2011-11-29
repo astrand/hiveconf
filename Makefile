@@ -10,11 +10,18 @@ install:
 	./setup.py install
 	./create_pth.sh
 
-rpm: 
-	./setup.py bdist_rpm --release=1
+rpm: dist
+	mv hiveconf.spec hiveconf.tmp
+	echo '%define _binary_payload w9.gzdio' > hiveconf.spec
+	echo '%define _binary_filedigest_algorithm 1' >> hiveconf.spec
+	echo '%define _noPayloadPrefix 1' >> hiveconf.spec
+	cat hiveconf.tmp >> hiveconf.spec
+	rm hiveconf.tmp
+	rpmbuild -ba hiveconf.spec --nodirtokens
 
-dist:
+dist: 
 # We distribute a .spec file, so that it's possible to run "rpm -ta hiveconf.tgz"
-	./setup.py bdist_rpm --spec-only 
-	mv dist/hiveconf.spec .
+	rm -rf dist
+	./setup.py bdist_rpm --spec-only --release=1
+	cp dist/hiveconf.spec .
 	./setup.py sdist
