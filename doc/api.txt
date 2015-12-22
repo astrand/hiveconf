@@ -7,7 +7,7 @@ Module contents
 Functions
 ---------
 
-open_hive(hive_file)
+open_hive(hive_file, blacklist=None)
 
 Open and parse hive file. Returns a folder instance, corresponding to
 the root folder in the configuration namespace. 

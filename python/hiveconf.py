@@ -632,16 +632,20 @@ class Folder(NamespaceObject):
             indent.change(-4)
             
 
-def open_hive(url):
+def open_hive(url, blacklist=None):
     # Relative URLs should be resolved relative to _get_cwd_url().
-    hfp = _HiveFileParser(urlparse.urljoin(_get_cwd_url(), url))
+    hfp = _HiveFileParser(urlparse.urljoin(_get_cwd_url(), url), blacklist)
     return hfp.parse()
 
 
 class _HiveFileParser:
-    def __init__(self, url):
+    def __init__(self, url, blacklist):
         # URL to entry hive
         self.url = url
+        if blacklist is None:
+            self.blacklist = []
+        else:
+            self.blacklist = blacklist
 
     def parse(self, url=None, rootfolder=None):
         """Open and parse a hive file. Returns a folder"""
@@ -831,7 +835,11 @@ class _HiveFileParser:
             if glob_result:
                 glob_result.sort()
                 for file_to_mount in glob_result:
-                    urls_to_mount.append("file://" + file_to_mount)
+                    for bl_file in self.blacklist:
+                        if os.path.samefile(file_to_mount, bl_file):
+                            break
+                    else:
+                        urls_to_mount.append("file://" + file_to_mount)
             else:
                 # No files found. Create file if the path had no wildcards
                 if not _has_glob_wildchars(mntpath):
