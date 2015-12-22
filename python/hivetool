@@ -82,11 +82,51 @@ def eval_print(hive, varname, param, export):
         return 0
 
 
+def imp_walk(hive, ih, folderpath):
+    # Handle parameters and values
+    for paramname in ih.get_parameters(folderpath):
+        parampath = folderpath + "/" + paramname
+        value = ih.get_string(parampath)
+        #print "setting", parampath, "to", value
+        hive.set_string(parampath, value)
+        if parampath in purge_params:
+            purge_params.remove(parampath)
+
+    for subname in ih.get_folders(folderpath):
+        if subname == "/":
+            continue
+        if folderpath != "/":
+            subname = "/" + subname
+        subfolder = folderpath + subname
+        imp_walk(hive, ih, subfolder)
+
+# A list of parameters to delete
+purge_params = []
+
+def purge_walk(hive, ph, folderpath):
+    # Handle parameters and values
+    for paramname in ph.get_parameters(folderpath):
+        parampath = folderpath + "/" + paramname
+        if hive.lookup(parampath) != None:
+            # Add to delete-list
+            purge_params.append(parampath)
+
+    for subname in ph.get_folders(folderpath):
+        if subname == "/":
+            continue
+        if folderpath != "/":
+            subname = "/" + subname
+        subfolder = folderpath + subname
+        purge_walk(hive, ph, subfolder)
+
+
 def usage():
     print >>sys.stderr, """
 hivetool [options] [type:]parameter[=value] ...
 
   -a,--all-entries        Print all parameters and values in a folder
+  -i,--import <file>      Import all parameters in specified file
+  -p,--purge <file>       Remove parameters in specified file which exists elsewhere
   -R,--recursive	  When using -a, ascend folders recursively
   -r,--root <file>	  Specify root hive file. Default is /etc/root.hconf
   -e,--eval VAR=parameter Print parameter value in format suitable for
@@ -104,14 +144,16 @@ hivetool [options] [type:]parameter[=value] ...
   hivetool -Ra /
 
   hivetool -r /etc/samba/smb.conf /global/workgroup=MYWORKGROUP
+
+  hivetool -p /etc/samba/smb.conf -i /etc/samba/smb.conf.rpmsave
 """
 
 
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "a:Rr:ve:E:x?",
-                                   ["all-entries=", "recursive", "root=", "version", "help",
+        opts, args = getopt.getopt(sys.argv[1:], "a:i:p:Rr:ve:E:x?",
+                                   ["all-entries=", "import=", "purge=", "recursive", "root=", "version", "help",
                                     "eval=", "export"])
     except getopt.GetoptError:
         usage()
@@ -119,6 +161,8 @@ def main():
 
     roothive = DEFAULT_ROOT_HIVE
     walk_folders = []
+    imp_files = []
+    purge_files = []
     recursive = 0
     e_params =[]
     E_params = []
@@ -126,6 +170,10 @@ def main():
     for o, a in opts:
         if o in ("-a", "--all-entries"):
             walk_folders.append(a)
+        if o in ("-i", "--import"):
+            imp_files.append(a)
+        if o in ("-p", "--purge"):
+            purge_files.append(a)
         if o in ("-R", "--recursive"):
             recursive = 1
         if o in ("-r", "--root"):
@@ -151,6 +199,25 @@ def main():
 
     # Try to open root hive
     hive = hiveconf.open_hive(roothive)
+
+    # Retrieve parameters to purge from specified files
+    for purge_file in purge_files:
+        ph = hiveconf.open_hive(purge_file)
+        reduced_hive = hiveconf.open_hive(roothive, blacklist=[purge_file])
+        purge_walk(reduced_hive, ph, "/")
+
+    # Import specified files
+    for imp_file in imp_files:
+        ih = hiveconf.open_hive(imp_file)
+        imp_walk(hive, ih, "/")
+
+    # Actually purge. Note that if you specify all files where the
+    # parameter is defined as purge files, then all instances of the
+    # parameter will be deleted.
+    for purge_file in purge_files:
+        ph = hiveconf.open_hive(purge_file)
+        for pp in purge_params:
+            ph.delete(pp)
 
     # Handle -e parameters
     for (varname, param) in e_params:
