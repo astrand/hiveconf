@@ -150,7 +150,7 @@ class Parameter(NamespaceObject):
         self._value = value
         # URL that this parameter was read from
         if not source:
-            raise "No source!" # FIXME
+            raise Error("Empty source file!")
         self.source = source
         self.sectionname = sectionname
         # FIXME: The class probably shouldn't know about it's own name.
