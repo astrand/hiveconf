@@ -162,26 +162,26 @@ class Parameter(NamespaceObject):
                % (self.paramname, self._value, self.sectionname, self.source,
                   self.write_target)
 
-    def _be_add_param(self):
+    def write_new(self):
         """Add a new parameter to the backend"""
         if not self.write_target:
-            print >>debugw, "_be_add_param(%s): no write_target" % self.paramname
+            print >>debugw, "write_new(%s): no write_target" % self.paramname
             return 0
         
         hfu = _HiveFileUpdater(self.write_target)
         hfu.add_parameter(self.sectionname, self.paramname, self._value)
         return 1
 
-    def _be_change_param(self, delete=0):
+    def write_update(self, delete=0):
         """Change the value of a existing parameter in the backend"""
         if not self.write_target:
-            print >>debugw, "_be_change_param(%s): no write_target" % self.paramname
+            print >>debugw, "write_update(%s): no write_target" % self.paramname
             return 0
         
         if self.source != self.write_target:
             # If we should write to another file than the parameter
             # was read from, we should add, not change
-            return self._be_add_param()
+            return self.write_new()
         else:
             hfu = _HiveFileUpdater(self.write_target)
             hfu.change_parameter(self.sectionname, self.paramname,
@@ -355,11 +355,11 @@ class Folder(NamespaceObject):
                and _check_write_access(write_target):
             self.write_target = write_target
 
-    def _be_write_section(self):
+    def _write_new_section(self):
         hfu = _HiveFileUpdater(self.write_target)
         hfu.add_section(self.sectionname)
 
-    def _be_delete_folder(self):
+    def _write_delete_section(self):
         hfu = _HiveFileUpdater(self.write_target)
         return hfu.delete_section(self.sectionname)
 
@@ -442,13 +442,13 @@ class Folder(NamespaceObject):
         for (subparamname, subparam) in folder._parameters.items():
             folder._delete_param(subparamname)
 
-        self._folders[foldername]._be_delete_folder()
+        self._folders[foldername]._write_delete_section()
         del self._folders[foldername]
         return 1
 
     def _delete_param(self, paramname):
         print >> debugw, self, "_delete_param(\"%s\")" % paramname
-        self._parameters[paramname]._be_change_param(delete=1)
+        self._parameters[paramname].write_update(delete=1)
         del self._parameters[paramname]
         return 1
 
@@ -513,11 +513,11 @@ class Folder(NamespaceObject):
             method(param, value)
             folder._addobject(param, paramname)
             # Write new parameter to disk
-            return param._be_add_param()
+            return param.write_new()
         else:
             # Update existing parameter
             method(param, value)
-            return param._be_change_param()
+            return param.write_update()
 
     def set_string(self, parampath, value):
         return self._set_value(parampath, value, Parameter.set_string)
@@ -586,7 +586,7 @@ class Folder(NamespaceObject):
             # Last step in recursion
             if create_folder:
                 # Last component, sync to disk
-                obj._be_write_section()
+                obj._write_new_section()
                 # Set source
                 obj._update(obj.write_target)
             
