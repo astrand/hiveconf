@@ -131,11 +131,6 @@ def _check_write_access(url):
         # Cannot write to other URLs, currently
         return 0
 
-def _check_create_possible(file):
-    """Check if it's possible to create this file"""
-    directory = os.path.dirname(file)
-    return os.access(dirname, W_OK)
-
 _glob_magic_check = re.compile('[*?[]')
 def _has_glob_wildchars(s):
     return _glob_magic_check.search(s) is not None
