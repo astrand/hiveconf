@@ -906,6 +906,11 @@ class _HiveFileUpdater:
     def delete_section(self, sectionname):
         with open(self.filename, "r+") as f:
             section_offset = self._find_offset(f, sectionname, None, get_section=1)
+            # FIXME: the readline() below looks weird. Currently this will
+            #        remove the section-line AND the next line.
+            #        Either remove only the section-line or the entire
+            #        section including all parameters (and subsections?).
+            #        See https://www.cendio.com/bugzilla/show_bug.cgi?id=6122
             f.readline()
             rest_data = f.read()
             f.seek(section_offset)
