@@ -875,42 +875,42 @@ class _HiveFileUpdater:
                          delete_param=0):
         """Change existing parameter line in file"""
         # FIXME: Use file locking
-        f = open(self.filename, "r+")
-        parameter_offset = self._find_offset(f, sectionname, paramname, new_param)
-        rest_data = f.read()
+        with open(self.filename, "r+") as f:
+            parameter_offset = self._find_offset(f, sectionname, paramname, new_param)
+            rest_data = f.read()
 
-        if parameter_offset == None:
-            # The parameter was not found!
-            # If we are adding a parameter to a section that is not
-            # in this file, we should create the section.
-            if new_param:
-                self.add_section(sectionname)
-                # Now we can add the parameter at the end.
-                f.seek(0, 2)
-                parameter_offset = f.tell()
-            else:
-                raise NoSuchParameterError()
+            if parameter_offset == None:
+                # The parameter was not found!
+                # If we are adding a parameter to a section that is not
+                # in this file, we should create the section.
+                if new_param:
+                    self.add_section(sectionname)
+                    # Now we can add the parameter at the end.
+                    f.seek(0, 2)
+                    parameter_offset = f.tell()
+                else:
+                    raise NoSuchParameterError()
 
-        # Seek to parameter offset, and write new value
-        f.seek(parameter_offset)
-        if not delete_param:
-            print >> f, paramname + "=" + value
+            # Seek to parameter offset, and write new value
+            f.seek(parameter_offset)
+            if not delete_param:
+                print >> f, paramname + "=" + value
 
-        # Write rest
-        f.write(rest_data)
-        f.truncate()
+            # Write rest
+            f.write(rest_data)
+            f.truncate()
 
     def add_parameter(self, sectionname, paramname, value):
         self.change_parameter(sectionname, paramname, value, new_param=1)
 
     def delete_section(self, sectionname):
-        f = open(self.filename, "r+")
-        section_offset = self._find_offset(f, sectionname, None, get_section=1)
-        f.readline()
-        rest_data = f.read()
-        f.seek(section_offset)
-        f.write(rest_data)
-        f.truncate()
+        with open(self.filename, "r+") as f:
+            section_offset = self._find_offset(f, sectionname, None, get_section=1)
+            f.readline()
+            rest_data = f.read()
+            f.seek(section_offset)
+            f.write(rest_data)
+            f.truncate()
 
     def _find_offset(self, f, sectionname, paramname, new_param=0,
                      get_section=0):
@@ -965,7 +965,6 @@ class _HiveFileUpdater:
 
     def add_section(self, sectionname):
         """Add new section to end of file"""
-        f = open(self.filename, "a")
-        print >> f
-        print >> f, "[%s]" % sectionname
-
+        with open(self.filename, "a") as f:
+            print >> f
+            print >> f, "[%s]" % sectionname
