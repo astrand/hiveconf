@@ -27,13 +27,13 @@
 # ---------
 
 import sys
-import urllib2
-import urlparse
 import os
 import string
 import glob
 import getopt
 import re
+import urllib.parse
+import binascii
 
 class _DebugWriter:
     def __init__(self, debug):
@@ -86,6 +86,13 @@ class SyntaxError(Error):
     def __str__(self):
         return "Bad line %d in %s" % (self.linenum, self.url)
 
+class UnicodeError(Error):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 #
 # Utility functions
 #
@@ -117,11 +124,11 @@ def _get_cwd_url():
 
 def _get_url_scheme(url):
     """Get URL scheme"""
-    return urlparse.urlsplit(url)[0]
+    return urllib.parse.urlsplit(url)[0]
 
 def _get_url_path(url):
     """Get URL path component"""
-    return urlparse.urlsplit(url)[2]
+    return urllib.parse.urlsplit(url)[2]
 
 def _fixup_sectionname(sn):
     """Add leading slash, remove trailing slash, if necessary"""
@@ -173,7 +180,7 @@ class Parameter(NamespaceObject):
     def write_new(self):
         """Add a new parameter to the backend"""
         if not self.write_target:
-            print >>debugw, "write_new(%s): no write_target" % self.paramname
+            print("write_new(%s): no write_target" % self.paramname, file=debugw)
             return 0
         
         hfu = _HiveFileUpdater(self.write_target)
@@ -183,7 +190,7 @@ class Parameter(NamespaceObject):
     def write_update(self, delete=0):
         """Change the value of a existing parameter in the backend"""
         if not self.write_target:
-            print >>debugw, "write_update(%s): no write_target" % self.paramname
+            print("write_update(%s): no write_target" % self.paramname, file=debugw)
             return 0
         
         if self.source != self.write_target:
@@ -228,7 +235,7 @@ class Parameter(NamespaceObject):
     def get_binary(self):
         """Get binary value"""
         try:
-            return self._hexascii2string(self._value)
+            return self._hexascii2bytes(self._value)
         except ValueError:
             raise BadBinaryFormat()
 
@@ -239,17 +246,17 @@ class Parameter(NamespaceObject):
         return self._value.split()
 
     def get_bool_list(self):
-        return map(self._string2bool, self._value.split())
+        return list(map(self._string2bool, self._value.split()))
 
     def get_integer_list(self):
-        return map(int, self._value.split())
+        return list(map(int, self._value.split()))
 
     def get_float_list(self):
-        return map(float, self._value.split())
+        return list(map(float, self._value.split()))
 
     def get_binary_list(self):
-        return map(self._hexascii2string, self._value.split())
-    
+        return list(map(self._hexascii2bytes, self._value.split()))
+
     #
     # Primitive data types, set operations
     #
@@ -271,30 +278,30 @@ class Parameter(NamespaceObject):
 
     def set_binary(self, new_value):
         """Set binary value"""
-        self._value = self._string2hexascii(new_value)
+        self._value = self._bytes2hexascii(new_value)
 
     #
     # Compound data types, set operations
     #
     def set_string_list(self, new_value):
         """Set string list value"""
-        self._value = string.join(new_value)
+        self._value = " ".join(new_value)
     
     def set_bool_list(self, new_value):
         """Set bool list value"""
-        self._value = string.join(map(self._bool2string, new_value))
+        self._value = " ".join(map(self._bool2string, new_value))
 
     def set_integer_list(self, new_value):
         """Set integer list value"""
-        self._value = string.join(map(str, new_value))
+        self._value = " ".join(map(str, new_value))
 
     def set_float_list(self, new_value):
         """Set float list value"""
-        self._value = string.join(map(str, new_value))
+        self._value = " ".join(map(str, new_value))
 
     def set_binary_list(self, new_value):
         """Set binary list value"""
-        self._value = string.join(map(self._string2hexascii, new_value))
+        self._value = " ".join(map(self._bytes2hexascii, new_value))
 
     #
     # Internal methods
@@ -303,23 +310,17 @@ class Parameter(NamespaceObject):
         """Convert a Python bool value to 'true' or 'false'"""
         return value and "true" or "false"
         
-    def _string2hexascii(self, s):
-        """Convert string to hexascii"""
-        result = ""
-        for char in s:
-            result += "%02x" % ord(char)
-        return result
+    def _bytes2hexascii(self, b):
+        """Convert bytes to hexascii"""
+        result = binascii.hexlify(b)
+        return result.decode('ascii')
 
-    def _hexascii2string(self, s):
-        """Convert hexascii to string"""
-        # Remove all whitespace from string
-        s = s.translate(string.maketrans("", ""), string.whitespace)
-        result = ""
-        for x in range(len(s)/2):
-            pair = s[x*2:x*2+2]
-            val = int(pair, 16)
-            result += chr(val)
-        return result
+    def _hexascii2bytes(self, s):
+        """Convert hexascii to bytes"""
+        # Since Python 3.7 'fromhex' will ignore all ASCII whitespace, not just
+        # spaces. To support Python < 3.7 we have to manually split first.
+        s = "".join(s.split())
+        return bytes.fromhex(s)
 
     def _string2bool(self, s):
         lcase = s.lower()
@@ -350,7 +351,7 @@ class Folder(NamespaceObject):
 
     def __repr__(self):
         return "<Folder: sources=%s  write_target=%s  sectionname=%s>" \
-               % (string.join(self.sources, ","), self.write_target, self.sectionname)
+               % (",".join(self.sources), self.write_target, self.sectionname)
 
     def _update(self, source):
         if source:
@@ -376,10 +377,10 @@ class Folder(NamespaceObject):
             raise ObjectExistsError
 
         if isinstance(obj, Parameter):
-            print >>debugw, "Adding parameter", objname
+            print("Adding parameter", objname, file=debugw)
             self._parameters[objname] = obj
         elif isinstance(obj, Folder):
-            print >>debugw, "Adding folder", objname
+            print("Adding folder", objname, file=debugw)
             self._folders[objname] = obj
         else:
             raise InvalidObjectError
@@ -388,7 +389,7 @@ class Folder(NamespaceObject):
         return self._folders.get(objname) or self._parameters.get(objname)
         
     def _exists(self, objname):
-        return self._folders.has_key(objname) or self._parameters.has_key(objname)
+        return objname in self._folders or objname in self._parameters
 
     #
     # Get methods
@@ -397,14 +398,14 @@ class Folder(NamespaceObject):
         """Get folder names in folder"""
         if default == None:
             default = []
-        
+
         folder = self.lookup(folderpath)
 
         if not folder:
             return default
         else:
-            return folder._folders.keys()
-        
+            return list(folder._folders.keys())
+
     def get_parameters(self, folderpath, default=None):
         """Get parameter names in this folder"""
         if default == None:
@@ -414,7 +415,7 @@ class Folder(NamespaceObject):
         if not folder:
             return default
         else:
-            return folder._parameters.keys()
+            return list(folder._parameters.keys())
 
     def delete(self, path, recursive=0):
         obj = self.lookup(path)
@@ -432,8 +433,8 @@ class Folder(NamespaceObject):
         if isinstance(obj, Parameter):
             return parentfolder._delete_param(comps[-1])
         else:
-            subfolders = obj._folders.keys()
-            subparams = obj._parameters.keys()
+            subfolders = list(obj._folders.keys())
+            subparams = list(obj._parameters.keys())
 
             if ([] != subfolders or [] != subparams) and not recursive:
                 raise FolderNotEmpty
@@ -441,13 +442,13 @@ class Folder(NamespaceObject):
             return parentfolder._delete_folder(comps[-1])
 
     def _delete_folder(self, foldername):
-        print >> debugw, self, "_delete_folder(\"%s\")" % foldername
+        print(self, "_delete_folder(\"%s\")" % foldername, file=debugw)
         folder = self._folders[foldername]
-        for (subfoldername, subfolder) in folder._folders.items():
+        for (subfoldername, subfolder) in list(folder._folders.items()):
             if "/" == subfoldername:
                 continue
             folder._delete_folder(subfoldername)
-        for (subparamname, subparam) in folder._parameters.items():
+        for (subparamname, subparam) in list(folder._parameters.items()):
             folder._delete_param(subparamname)
 
         self._folders[foldername]._write_delete_section()
@@ -455,7 +456,7 @@ class Folder(NamespaceObject):
         return 1
 
     def _delete_param(self, paramname):
-        print >> debugw, self, "_delete_param(\"%s\")" % paramname
+        print(self, "_delete_param(\"%s\")" % paramname, file=debugw)
         self._parameters[paramname].write_update(delete=1)
         del self._parameters[paramname]
         return 1
@@ -573,8 +574,8 @@ class Folder(NamespaceObject):
         The last component will be recognized as a Folder, and it will be
         created and written to disk. 
         """
-        print >>debugw, "_lookup_list with components:", repr(comps)
-        
+        print("_lookup_list with components:", repr(comps), file=debugw)
+
         obj_name = comps[0]
         rest_comps = comps[1:]
         sectionname = os.path.join(sectionname, obj_name)
@@ -603,41 +604,52 @@ class Folder(NamespaceObject):
             # Recursive call with rest of component list
             if not isinstance(obj, Folder):
                 raise ObjectExistsError
-            
+
             return obj._lookup_list(rest_comps, autocreate, sectionname)
 
     def walk(self, recursive=1, indent=None):
+        def _unicode_to_print(*args, **kwargs):
+            try:
+                print(*args, file=kwargs["file"])
+            except UnicodeEncodeError:
+                if len(self.sources) > 0:
+                    raise UnicodeError("Characters in [%s] in %s cannot be printed." \
+                                       % (self.sectionname, self.sources[0]))
+                else:
+                    raise UnicodeError("Characters in [%s] cannot be printed." \
+                                       % (self.sectionname))
+
         if not indent:
             indent = _IndentPrinter()
             # Print root folder in debug mode
             if debugw.debug:
-                print >>indent, "/", str(self)
+                _unicode_to_print("/", str(self), file=indent)
 
         # Print Parameters and values
         for (paramname, param) in self._parameters.items():
             if not debugw.debug:
-                print >> indent, paramname, "=", param.get_string()
+                _unicode_to_print(paramname, "=", param.get_string(), file=indent)
             else:
-                print >> indent, paramname, param
+                _unicode_to_print(paramname, param, file=indent)
 
         # Print Foldernames and their contents
         for (foldername, folder) in self._folders.items():
             if foldername == "/":
                 continue
-            
+
             if not debugw.debug:
-                print >>indent, foldername + "/ "
+                _unicode_to_print(foldername + "/ ", file=indent)
             else:
-                print >>indent, foldername + "/", str(folder)
+                _unicode_to_print(foldername + "/", str(folder), file=indent)
             indent.change(4)
             if recursive:
                 folder.walk(recursive, indent)
             indent.change(-4)
-            
+
 
 def open_hive(url, blacklist=None):
     # Relative URLs should be resolved relative to _get_cwd_url().
-    hfp = _HiveFileParser(urlparse.urljoin(_get_cwd_url(), url), blacklist)
+    hfp = _HiveFileParser(urllib.parse.urljoin(_get_cwd_url(), url), blacklist)
     return hfp.parse()
 
 
@@ -655,14 +667,14 @@ class _HiveFileParser:
         if not url:
             url = self.url
         
-        print >>debugw, "Opening URL", url
+        print("Opening URL", url, file=debugw)
         try:
             # open() cannot open files with prefix "file://"
             if url.startswith("file://"):
-                file = open(url[7:], "r")
+                file = open(url[7:], "r", encoding="UTF-8")
             else:
-                file = open(url, "r")
-        except IOError: # We could not read a file. Just return, this is part
+                file = open(url, "r", encoding="UTF-8")
+        except OSError: # We could not read a file. Just return, this is part
             # of the Hiveconf specification.
             return
 
@@ -677,8 +689,11 @@ class _HiveFileParser:
         self.handle_section(rootfolder, "/", url)
 
         # Read & parse entire hive file
-        while 1:
-            line = file.readline()
+        while True:
+            try:
+                line = file.readline()
+            except UnicodeDecodeError:
+                raise UnicodeError("File %s contains non UTF-8 characters." % (url))
             linenum += 1
 
             if not line:
@@ -692,11 +707,12 @@ class _HiveFileParser:
             if line.startswith("["):
                 # Folder
                 if not line.endswith("]"):
-                    print >>sys.stderr, "%s: line %d: Syntax error: line does not end with ]" % (url, linenum)
+                    print("%s: line %d: Syntax error: line does not end with ]" \
+                          % (url, linenum), file=sys.stderr)
                     continue
 
                 sectionname = line[1:-1]
-                print >>debugw, "Read section line", sectionname
+                print("Read section line", sectionname, file=debugw)
                 curfolder = self.handle_section(rootfolder, sectionname, url)
 
             elif line.startswith("%"):
@@ -709,14 +725,14 @@ class _HiveFileParser:
                 if directive == "%mount":
                     self.mount_directive(args, curfolder, url, linenum, sectionname)
                 else:
-                    print >>sys.stderr, "%s: line %d: unknown directive" % (url, linenum)
+                    print("%s: line %d: unknown directive" % (url, linenum), file=sys.stderr)
 
             elif line.find("=") != -1:
                 # Parameter
                 (paramname, paramvalue) = line.split("=", 1)
                 paramname = paramname.strip()
                 paramvalue = paramvalue.strip()
-                print >>debugw, "Read parameter line", paramname
+                print("Read parameter line", paramname, file=debugw)
                 if _check_write_access(url):
                     write_target = url
                 else:
@@ -724,7 +740,7 @@ class _HiveFileParser:
                 try:
                     curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname, write_target), paramname)
                 except ObjectExistsError:
-                    print >>debugw, "Object '%s' already exists" % paramname
+                    print("Object '%s' already exists" % paramname, file=debugw)
             else:
                 raise SyntaxError(url, linenum)
 
@@ -732,7 +748,7 @@ class _HiveFileParser:
 
 
     def handle_section(self, rootfolder, sectionname, source):
-        print >>debugw, "handle_section for section", sectionname
+        print("handle_section for section", sectionname, file=debugw)
         comps = _path2comps(sectionname)
 
         folder = rootfolder._lookup_list(comps)
@@ -785,7 +801,7 @@ class _HiveFileParser:
         try:
             opts, args = getopt.getopt(args, "t:a:")
         except getopt.GetoptError:
-            print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
+            print("%s: line %d: invalid syntax" % (url, linenum), file=sys.stderr)
             return
 
         backend = "hivefile"
@@ -797,11 +813,11 @@ class _HiveFileParser:
                 backend_args = a
 
         if not len(args) == 1:
-            print >> sys.stderr, "%s: line %d: invalid syntax" % (url, linenum)
+            print("%s: line %d: invalid syntax" % (url, linenum), file=sys.stderr)
             return
 
         # Resolve URL, relative to the doc base URL
-        mnturl = urlparse.urljoin(url, args[0])
+        mnturl = urllib.parse.urljoin(url, args[0])
         del args
 
         for mount_url in self._get_urls_to_mount(mnturl):
@@ -821,11 +837,11 @@ class _HiveFileParser:
                     if name == "name":
                         paramname = value
 
-                paramvalue = open(mount_url, "r").read()
+                paramvalue = open(mount_url, "r", encoding="UTF-8").read()
                 curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname, mount_url), paramname)
 
             else:
-                print >> sys.stderr, "%s: line %d: unsupported backend" % (url, linenum)
+                print("%s: line %d: unsupported backend" % (url, linenum), file=sys.stderr)
                 continue
 
 
@@ -837,7 +853,7 @@ class _HiveFileParser:
             mntpath = os.path.expanduser(mntpath)
             # Glob local files
             urls_to_mount =[]
-            print >>debugw, "Globbing path", mntpath
+            print("Globbing path", mntpath, file=debugw)
             glob_result = glob.glob(mntpath)
             if glob_result:
                 glob_result.sort()
@@ -852,9 +868,10 @@ class _HiveFileParser:
                 if not _has_glob_wildchars(mntpath):
                     try:
                         # Touch
-                        open(mntpath, "w")
-                    except IOError:
-                        print >>debugw, "Couldn't create", mntpath
+                        with open(mntpath, "w", encoding="UTF-8"):
+                            pass
+                    except OSError:
+                        print("Couldn't create", mntpath, file=debugw)
                     else:
                         # Successfully created file
                         urls_to_mount.append("file://" + mntpath)
@@ -870,7 +887,7 @@ class _HiveFileUpdater:
     def __init__(self, source):
         self.source = source
 
-        (scheme, netloc, self.filename, query, fragment) = urlparse.urlsplit(self.source)
+        (scheme, netloc, self.filename, query, fragment) = urllib.parse.urlsplit(self.source)
         if not scheme == "file":
             # Only able to write to local files right now
             raise ReadOnlySource()
@@ -879,7 +896,7 @@ class _HiveFileUpdater:
                          delete_param=0):
         """Change existing parameter line in file"""
         # FIXME: Use file locking
-        with open(self.filename, "r+") as f:
+        with open(self.filename, "r+", encoding="UTF-8") as f:
             parameter_offset = self._find_offset(f, sectionname, paramname, new_param)
             rest_data = f.read()
 
@@ -898,7 +915,7 @@ class _HiveFileUpdater:
             # Seek to parameter offset, and write new value
             f.seek(parameter_offset)
             if not delete_param:
-                print >> f, paramname + "=" + value
+                print(paramname + "=" + value, file=f)
 
             # Write rest
             f.write(rest_data)
@@ -908,7 +925,7 @@ class _HiveFileUpdater:
         self.change_parameter(sectionname, paramname, value, new_param=1)
 
     def delete_section(self, sectionname):
-        with open(self.filename, "r+") as f:
+        with open(self.filename, "r+", encoding="UTF-8") as f:
             section_offset = self._find_offset(f, sectionname, None, get_section=1)
             # FIXME: the readline() below looks weird. Currently this will
             #        remove the section-line AND the next line.
@@ -934,12 +951,12 @@ class _HiveFileUpdater:
         if correct_section and new_param:
             return f.tell()
 
-        print >> debugw, "_find_offset, sectionname:", sectionname
+        print("_find_offset, sectionname:", sectionname, file=debugw)
 
-        while 1:
+        while True:
             line_offset = f.tell()
             line = f.readline()
-            print >> debugw, "Read line:", line.strip()
+            print("Read line:", line.strip(), file=debugw)
 
             if not line:
                 break
@@ -974,6 +991,6 @@ class _HiveFileUpdater:
 
     def add_section(self, sectionname):
         """Add new section to end of file"""
-        with open(self.filename, "a") as f:
-            print >> f
-            print >> f, "[%s]" % sectionname
+        with open(self.filename, "a", encoding="UTF-8") as f:
+            print("", file=f)
+            print("[%s]" % sectionname, file=f)

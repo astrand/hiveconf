@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 # -*-Python-*-
 
 import sys
@@ -46,19 +46,19 @@ def handle_param(hive, param):
         try:
             value = method(parampath)
         except hiveconf.NotAParameterError:
-            print >>sys.stderr, "%s: Not a parameter" % parampath
+            print("%s: Not a parameter" % parampath, file=sys.stderr)
             return 1
             
         if value == None:
-            print >>sys.stderr, "%s: No such parameter" % parampath
+            print("%s: No such parameter" % parampath, file=sys.stderr)
             return 1
         else:
-            print value
+            print(value)
     else:
         # Set value
         method = getattr(hive, "set_%s" % paramtype)
         if not method(parampath, value):
-            print >>sys.stderr, "Failed to set parameter", parampath
+            print("Failed to set parameter", parampath, file=sys.stderr)
             return 1
     return 0
 
@@ -68,14 +68,14 @@ def eval_print(hive, varname, param, export):
     method = getattr(hive, "get_%s" % paramtype)
     value = method(parampath)
     if export:
-        print "export",
+        print("export", end=' ')
     if value:
         value = str(value)
         # ' is the only character that needs special handling
         value = value.replace("'", "'\\''")
-        print "%s='%s'" % (varname, value)
+        print("%s='%s'" % (varname, value))
     else:
-        print "%s=''" % varname
+        print("%s=''" % varname)
     if value == None:
         return 1
     else:
@@ -121,7 +121,7 @@ def purge_walk(hive, ph, folderpath):
 
 
 def usage():
-    print >>sys.stderr, """
+    print("""
 hivetool [options] [type:]parameter[=value] ...
 
   -a,--all-entries        Print all parameters and values in a folder
@@ -146,7 +146,7 @@ hivetool [options] [type:]parameter[=value] ...
   hivetool -r /etc/samba/smb.conf /global/workgroup=MYWORKGROUP
 
   hivetool -p /etc/samba/smb.conf -i /etc/samba/smb.conf.rpmsave
-"""
+""", file=sys.stderr)
 
 
 
@@ -179,7 +179,7 @@ def main():
         if o in ("-r", "--root"):
             roothive = a
         if o in ("-v", "--version"):
-            print >> sys.stderr, "hivetool version", VERSION
+            print("hivetool version", VERSION, file=sys.stderr)
             sys.exit(0)
         if o in ("-e", "--eval"):
             words = a.split("=", 1)
@@ -238,11 +238,11 @@ def main():
     for foldername in walk_folders:
         folder = hive.lookup(foldername)
         if not folder:
-            print >>sys.stderr, "%s: Folder not found" % foldername
+            print("%s: Folder not found" % foldername, file=sys.stderr)
             continue
 
         if not isinstance(folder, hiveconf.Folder):
-            print >>sys.stderr, "%s: not a folder" % foldername
+            print("%s: not a folder" % foldername, file=sys.stderr)
             continue
         
         folder.walk(recursive)
