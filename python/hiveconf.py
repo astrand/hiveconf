@@ -713,11 +713,11 @@ class _HiveFileParser:
                 paramname = paramname.strip()
                 paramvalue = paramvalue.strip()
                 print >>debugw, "Read parameter line", paramname
+                if _check_write_access(url):
+                    write_target = url
+                else:
+                    write_target = curfolder.write_target
                 try:
-                    if _check_write_access(url):
-                        write_target = url
-                    else:
-                        write_target = curfolder.write_target
                     curfolder._addobject(Parameter(paramvalue, url, sectionname, paramname, write_target), paramname)
                 except ObjectExistsError:
                     print >>debugw, "Object '%s' already exists" % paramname
