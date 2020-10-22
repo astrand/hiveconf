@@ -18,6 +18,14 @@
 # Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 # 02111-1307 USA
 
+# -- API --
+# The public API of this file is open_hive() which, in turn, gives
+# a Folder. That means all non underscored Folder functions should
+# be considered public.
+# Folder.lookup() can return a Parameter. That means all non
+# underscored Parameter functions should also be considered public.
+# ---------
+
 import sys
 import urllib2
 import urlparse
