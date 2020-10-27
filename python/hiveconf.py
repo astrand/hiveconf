@@ -657,7 +657,11 @@ class _HiveFileParser:
         
         print >>debugw, "Opening URL", url
         try:
-            file = urllib2.urlopen(url)
+            # open() cannot open files with prefix "file://"
+            if url.startswith("file://"):
+                file = open(url[7:], "r")
+            else:
+                file = open(url, "r")
         except IOError: # We could not read a file. Just return, this is part
             # of the Hiveconf specification.
             return
@@ -817,7 +821,7 @@ class _HiveFileParser:
                     if name == "name":
                         paramname = value
 
-                paramvalue = urllib2.urlopen(mount_url).read()
+                paramvalue = open(mount_url, "r").read()
                 curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname, mount_url), paramname)
 
             else:
