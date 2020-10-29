@@ -669,11 +669,11 @@ class _HiveFileParser:
         
         print("Opening URL", url, file=debugw)
         try:
-            # open() cannot open files with prefix "file://"
-            if url.startswith("file://"):
-                file = open(url[7:], "r", encoding="UTF-8")
+            if _get_url_scheme(url) == "file" or _get_url_scheme(url) == "":
+                file = open(_get_url_path(url), "r", encoding="UTF-8")
             else:
-                file = open(url, "r", encoding="UTF-8")
+                # FIXME: Url:s have broken unicode handling - we can't know the encoding
+                return
         except OSError: # We could not read a file. Just return, this is part
             # of the Hiveconf specification.
             return
