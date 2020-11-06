@@ -666,11 +666,16 @@ class _HiveFileParser:
         """Open and parse a hive file. Returns a folder"""
         if not url:
             url = self.url
-        
+
+        if not rootfolder:
+            rootfolder = Folder(url, url, "/")
+            rootfolder._addobject(rootfolder, "/")
+
         print("Opening URL", url, file=debugw)
         try:
             if _get_url_scheme(url) == "file" or _get_url_scheme(url) == "":
                 file = open(_get_url_path(url), "r", encoding="UTF-8")
+                self._parse_file(file, rootfolder, url)
             else:
                 # FIXME: Url:s have broken unicode handling - we can't know the encoding
                 return
@@ -678,9 +683,10 @@ class _HiveFileParser:
             # of the Hiveconf specification.
             return
 
-        if not rootfolder:
-            rootfolder = Folder(url, url, "/")
-            rootfolder._addobject(rootfolder, "/")
+        return rootfolder
+
+
+    def _parse_file(self, file, rootfolder, url):
         curfolder = rootfolder
         linenum = 0
         sectionname = ""
@@ -743,8 +749,6 @@ class _HiveFileParser:
                     print("Object '%s' already exists" % paramname, file=debugw)
             else:
                 raise SyntaxError(url, linenum)
-
-        return rootfolder
 
 
     def handle_section(self, rootfolder, sectionname, source):
