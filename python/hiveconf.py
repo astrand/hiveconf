@@ -674,8 +674,8 @@ class _HiveFileParser:
         print("Opening URL", url, file=debugw)
         try:
             if _get_url_scheme(url) == "file" or _get_url_scheme(url) == "":
-                file = open(_get_url_path(url), "r", encoding="UTF-8")
-                self._parse_file(file, rootfolder, url)
+                with open(_get_url_path(url), "r", encoding="UTF-8") as file:
+                    self._parse_file(file, rootfolder, url)
             else:
                 # FIXME: Url:s have broken unicode handling - we can't know the encoding
                 return
@@ -841,8 +841,9 @@ class _HiveFileParser:
                     if name == "name":
                         paramname = value
 
-                paramvalue = open(mount_url, "r", encoding="UTF-8").read()
-                curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname, mount_url), paramname)
+                with open(mount_url, "r", encoding="UTF-8") as f:
+                    paramvalue = f.read()
+                    curfolder._addobject(Parameter(paramvalue, mount_url, "", paramname, mount_url), paramname)
 
             else:
                 print("%s: line %d: unsupported backend" % (url, linenum), file=sys.stderr)
