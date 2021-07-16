@@ -9,6 +9,43 @@ VERSION="0.0"
 DEFAULT_TYPE="string"
 DEFAULT_ROOT_HIVE="/etc/root.hconf"
 
+#
+# Utility classes and functions
+#
+
+class _IndentPrinter:
+    def __init__(self):
+        self.indent = 0
+        self.line_indented = 0
+
+    def write(self, data):
+        if self.indent and not self.line_indented:
+            sys.stdout.write(" " * self.indent)
+            self.line_indented = 1
+        sys.stdout.write(data)
+        if data.find("\n") != -1:
+            self.line_indented = 0
+
+    def change(self, val):
+        self.indent += val
+
+def _unicode_to_print(*args, folder=None, **kwargs):
+    try:
+        print(*args, file=kwargs["file"])
+    except UnicodeEncodeError:
+        if folder:
+            if len(folder.sources) > 0:
+                raise hiveconf.UnicodeError("Characters in [%s] in %s cannot be printed." \
+                                    % (folder.sectionname, folder.sources[0]))
+            else:
+                raise hiveconf.UnicodeError("Characters in [%s] cannot be printed." \
+                                    % (folder.sectionname))
+
+#
+# End of utility classes and functions
+#
+
+
 def get_type(s):
     """Parse parameter string. Returns (type, parameter)"""
     words = s.split(":", 1)
@@ -118,6 +155,28 @@ def purge_walk(hive, ph, folderpath):
             subname = "/" + subname
         subfolder = folderpath + subname
         purge_walk(hive, ph, subfolder)
+
+
+def print_walk(folder, recursive=1, indent=None):
+    if not indent:
+        indent = _IndentPrinter()
+
+    # Print Parameters and values
+    for (paramname, param) in folder._parameters.items():
+        _unicode_to_print(paramname, "=", param.get_string(), file=indent,
+                          folder=folder)
+
+    # Print Foldernames and their contents
+    for (foldername, folder) in folder._folders.items():
+        if foldername == "/":
+            continue
+
+        _unicode_to_print(foldername + "/ ", file=indent, folder=folder)
+
+        indent.change(4)
+        if recursive:
+            print_walk(folder, recursive, indent)
+        indent.change(-4)
 
 
 def usage():
@@ -244,8 +303,8 @@ def main():
         if not isinstance(folder, hiveconf.Folder):
             print("%s: not a folder" % foldername, file=sys.stderr)
             continue
-        
-        folder.walk(recursive)
+
+        print_walk(folder, recursive)
 
     sys.exit(errors)
 

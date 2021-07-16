@@ -46,23 +46,6 @@ class _DebugWriter:
 debugw = _DebugWriter(debug=0)
 
 
-class _IndentPrinter:
-    def __init__(self):
-        self.indent = 0
-        self.line_indented = 0
-
-    def write(self, data):
-        if self.indent and not self.line_indented:
-            sys.stdout.write(" " * self.indent)
-            self.line_indented = 1
-        sys.stdout.write(data)
-        if data.find("\n") != -1:
-            self.line_indented = 0
-
-    def change(self, val):
-        self.indent += val
-        
-
 class Error(Exception): pass
 class NoSuchParameterError(Error): pass
 class NoSuchFolderError(Error): pass
@@ -606,45 +589,6 @@ class Folder(NamespaceObject):
                 raise ObjectExistsError
 
             return obj._lookup_list(rest_comps, autocreate, sectionname)
-
-    def walk(self, recursive=1, indent=None):
-        def _unicode_to_print(*args, **kwargs):
-            try:
-                print(*args, file=kwargs["file"])
-            except UnicodeEncodeError:
-                if len(self.sources) > 0:
-                    raise UnicodeError("Characters in [%s] in %s cannot be printed." \
-                                       % (self.sectionname, self.sources[0]))
-                else:
-                    raise UnicodeError("Characters in [%s] cannot be printed." \
-                                       % (self.sectionname))
-
-        if not indent:
-            indent = _IndentPrinter()
-            # Print root folder in debug mode
-            if debugw.debug:
-                _unicode_to_print("/", str(self), file=indent)
-
-        # Print Parameters and values
-        for (paramname, param) in self._parameters.items():
-            if not debugw.debug:
-                _unicode_to_print(paramname, "=", param.get_string(), file=indent)
-            else:
-                _unicode_to_print(paramname, param, file=indent)
-
-        # Print Foldernames and their contents
-        for (foldername, folder) in self._folders.items():
-            if foldername == "/":
-                continue
-
-            if not debugw.debug:
-                _unicode_to_print(foldername + "/ ", file=indent)
-            else:
-                _unicode_to_print(foldername + "/", str(folder), file=indent)
-            indent.change(4)
-            if recursive:
-                folder.walk(recursive, indent)
-            indent.change(-4)
 
 
 def open_hive(url, blacklist=None):

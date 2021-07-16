@@ -30,55 +30,6 @@ class HiveconfDebugWriterTest(unittest.TestCase):
         sys.stderr.write.assert_called_with("bär")
 
 
-class HiveconfIndentPrinterTest(unittest.TestCase):
-    @mock.patch('hiveconf.sys')
-    def test_indentprinter_write_indent(self, sys):
-        # Given
-        ip = hiveconf._IndentPrinter()
-        ip.indent = 1
-        ip.line_indented = 0
-        # When
-        ip.write("foo")
-        # Then
-        self.assertEqual(ip.line_indented, 1)
-        self.assertEqual(sys.stdout.write.call_count, 2)
-        sys.stdout.write.assert_any_call(" ")
-        sys.stdout.write.assert_any_call("foo")
-
-    @mock.patch('hiveconf.sys')
-    def test_indentprinter_write_no_indent(self, sys):
-        # Given
-        ip = hiveconf._IndentPrinter()
-        ip.indent = 0
-        ip.line_indented = 2
-        # When
-        ip.write("føo")
-        # Then
-        self.assertEqual(ip.line_indented, 2)
-        sys.stdout.write.assert_called_with("føo")
-
-    @mock.patch('hiveconf.sys')
-    def test_indentprinter_write_newline(self, sys):
-        # Given
-        ip = hiveconf._IndentPrinter()
-        ip.indent = 0
-        ip.line_indented = 3
-        # When
-        ip.write("foo\n")
-        # Then
-        self.assertEqual(ip.line_indented, 0)
-        sys.stdout.write.assert_called_with("foo\n")
-
-    def test_indentprinter_change(self):
-        # Given
-        ip = hiveconf._IndentPrinter()
-        ip.indent = 0
-        # When
-        ip.change(2)
-        # Then
-        self.assertEqual(ip.indent, 2)
-
-
 class HiveconfUtilitiesTest(unittest.TestCase):
     def test_path2comps_root(self):
         # Given
@@ -1267,69 +1218,6 @@ class HiveconfFolderTest(unittest.TestCase):
         f._parameters = {'param': p}
         # When/Then
         self.assertRaises(hiveconf.ObjectExistsError, f.lookup, "param/folder")
-
-    @mock.patch("hiveconf._IndentPrinter.write")
-    def test_walk(self, i_write):
-        # Given
-        p = hiveconf.Parameter("yay", "file1", "f", "p", "file1")
-        f = hiveconf.Folder("file1", "file1", "f")
-        f._parameters = {'p': p}
-        # When
-        f.walk()
-        # Then
-        i_write_args_str = self.get_args_str(i_write.call_args_list)
-        self.assertEqual(i_write_args_str, "p = yay\n")
-
-    @mock.patch("hiveconf._IndentPrinter.write")
-    def test_walk_recursive(self, i_write):
-        # Given
-        p = hiveconf.Parameter("hurray", "file1", "f1/f2", "p", "file1")
-        f2 = hiveconf.Folder("file1", "file1", "f1/f2")
-        f2._parameters = {'p': p}
-        f1 = hiveconf.Folder("file1", "file1", "f1")
-        f1._folders = {'f2': f2}
-        # When
-        f1.walk(recursive=1)
-        # Then
-        i_write_args_str = self.get_args_str(i_write.call_args_list)
-        self.assertEqual(i_write_args_str.splitlines()[0], "f2/ ")
-        self.assertEqual(i_write_args_str.splitlines()[1], "p = hurray")
-
-    def test_walk_indent(self):
-        # Given
-        p = hiveconf.Parameter("no more fun", "file1", "f1/f2", "p", "file1")
-        f2 = hiveconf.Folder("file1", "file1", "f1/f2")
-        f2._parameters = {'p': p}
-        f1 = hiveconf.Folder("file1", "file1", "f1")
-        f1._folders = {'f2': f2}
-        myindent = mock.MagicMock(autospec=True)
-        # When
-        f1.walk(recursive=1, indent=myindent)
-        # Then
-        myindent_args_str = self.get_args_str(myindent.write.call_args_list)
-        self.assertEqual(myindent_args_str.splitlines()[0], "f2/ ")
-        self.assertEqual(myindent_args_str.splitlines()[1], "p = no more fun")
-
-    @mock.patch("hiveconf._IndentPrinter.write")
-    def test_walk_ignore_slash_subfolders(self, i_write):
-        # Given
-        f = hiveconf.Folder("file1", "file1", "section1")
-        f._folders = {"/": ""}
-        # When
-        f.walk()
-        # Then
-        i_write.assert_not_called()
-
-    @mock.patch("hiveconf.print")
-    def test_walk_print_cause_UnicodeError(self, pyprint):
-        # Given
-        p = hiveconf.Parameter("hurray", "file1", "f1/f2", "p", "file1")
-        f1 = hiveconf.Folder("file1", "file1", "f1")
-        f1._parameters = {'p': p}
-        pyprint.side_effect = UnicodeEncodeError("", "", 0, 0, "")
-        # When / Then
-        with self.assertRaises(hiveconf.UnicodeError):
-            f1.walk(recursive=1)
 
 
 class OpenHiveTest(unittest.TestCase):
