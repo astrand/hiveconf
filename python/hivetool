@@ -13,25 +13,10 @@ DEFAULT_ROOT_HIVE="/etc/root.hconf"
 # Utility classes and functions
 #
 
-class _IndentPrinter:
-    def __init__(self):
-        self.indent = 0
-        self.line_indented = 0
-
-    def write(self, data):
-        if self.indent and not self.line_indented:
-            sys.stdout.write(" " * self.indent)
-            self.line_indented = 1
-        sys.stdout.write(data)
-        if data.find("\n") != -1:
-            self.line_indented = 0
-
-    def change(self, val):
-        self.indent += val
-
-def _unicode_to_print(*args, folder=None, **kwargs):
+def _unicode_to_print(*args, folder=None, indent=0):
     try:
-        print(*args, file=kwargs["file"])
+        sys.stdout.write(" " * indent)
+        print(*args)
     except UnicodeEncodeError:
         if folder:
             if len(folder.sources) > 0:
@@ -157,13 +142,10 @@ def purge_walk(hive, ph, folderpath):
         purge_walk(hive, ph, subfolder)
 
 
-def print_walk(folder, recursive=1, indent=None):
-    if not indent:
-        indent = _IndentPrinter()
-
+def print_walk(folder, recursive=1, indent=0):
     # Print Parameters and values
     for (paramname, param) in folder._parameters.items():
-        _unicode_to_print(paramname, "=", param.get_string(), file=indent,
+        _unicode_to_print(paramname, "=", param.get_string(), indent=indent,
                           folder=folder)
 
     # Print Foldernames and their contents
@@ -171,12 +153,10 @@ def print_walk(folder, recursive=1, indent=None):
         if foldername == "/":
             continue
 
-        _unicode_to_print(foldername + "/ ", file=indent, folder=folder)
+        _unicode_to_print(foldername + "/ ", indent=indent, folder=folder)
 
-        indent.change(4)
         if recursive:
-            print_walk(folder, recursive, indent)
-        indent.change(-4)
+            print_walk(folder, recursive, indent+4)
 
 
 def usage():
