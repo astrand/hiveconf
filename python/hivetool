@@ -9,27 +9,12 @@ VERSION="0.0"
 DEFAULT_TYPE="string"
 DEFAULT_ROOT_HIVE="/etc/root.hconf"
 
-#
-# Utility classes and functions
-#
-
-def _unicode_to_print(*args, section=None, source=None, indent=0):
-    try:
-        sys.stdout.write(" " * indent)
-        print(*args)
-    except UnicodeEncodeError:
-        if section is not None:
-            if source is not None:
-                raise hiveconf.UnicodeError("Characters in [%s] in %s cannot be printed." \
-                                    % (section, source))
-            else:
-                raise hiveconf.UnicodeError("Characters in [%s] cannot be printed." \
-                                    % (section))
-
-#
-# End of utility classes and functions
-#
-
+def safe_string(s):
+    """Makes a string safe to print on sys.stdout"""
+    enc = sys.stdout.encoding
+    if enc is None:
+        enc = locale.getpreferredencoding(False)
+    return s.encode(enc, errors="replace").decode(enc)
 
 def get_type(s):
     """Parse parameter string. Returns (type, parameter)"""
@@ -60,28 +45,39 @@ def get_value(s):
 def handle_param(hive, param):
     """Print parameter. Returns zero on success"""
     (paramtype, param) = get_type(param)
-    (parampath, value) = get_value(param)
+    (parampath, input_value) = get_value(param)
 
-    if not value:
+    current_value = None
+    new_param = False
+    method = getattr(hive, "get_%s" % paramtype)
+    try:
+        current_value = method(parampath)
+    except hiveconf.NotAParameterError:
+        display_error =  "%s: Not a parameter" % parampath
+        new_param = True
+
+    if current_value == None:
+        display_error = "%s: No such parameter" % parampath
+        new_param = True
+
+    if not input_value:
         # Display value
-        method = getattr(hive, "get_%s" % paramtype)
-        try:
-            value = method(parampath)
-        except hiveconf.NotAParameterError:
-            print("%s: Not a parameter" % parampath, file=sys.stderr)
-            return 1
-            
-        if value == None:
-            print("%s: No such parameter" % parampath, file=sys.stderr)
+        if new_param:
+            # Can't display the value of a parameter that doesn't exist
+            print(display_error, file=sys.stderr)
             return 1
         else:
-            print(value)
+            if isinstance(current_value, str):
+                current_value = safe_string(current_value)
+            print(current_value)
     else:
         # Set value
         method = getattr(hive, "set_%s" % paramtype)
-        if not method(parampath, value):
+        if not method(parampath, input_value):
             print("Failed to set parameter", parampath, file=sys.stderr)
             return 1
+        if new_param:
+            print("Created new parameter: ", parampath)
     return 0
 
 
@@ -156,15 +152,18 @@ def print_walk(hive, root, recursive=True):
         # Print sub-folder name
         if folderpath != root:
             foldername = os.path.basename(folderpath)
-            _unicode_to_print(foldername + "/", indent=(indent-4),
-                              section=section, source=source)
+            foldername = safe_string(foldername)
+            sys.stdout.write(" " * (indent-4))
+            sys.stdout.write(foldername + "/\n")
 
         # Print Parameters and values
         for param in params:
             parampath = folderpath + "/" + param
             value = hive.get_string(parampath)
-            _unicode_to_print(param, "=", value, indent=indent,
-                              section=section, source=source)
+            param = safe_string(param)
+            value = safe_string(value)
+            sys.stdout.write(" " * indent)
+            sys.stdout.write("%s = %s\n" % (param, value))
 
         if not recursive:
             break
