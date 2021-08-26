@@ -4,6 +4,7 @@ import os
 import sys
 import getopt
 import hiveconf
+import locale
 
 VERSION="0.0"
 DEFAULT_TYPE="string"
@@ -200,6 +201,12 @@ hivetool [options] [type:]parameter[=value] ...
 
 
 def main():
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+    except locale.Error as e:
+        print("\nWarning: Can't set the locale (%s); make sure $LC_* and $LANG are correct\n" %
+              e, file=sys.stderr)
+
     try:
         opts, args = getopt.getopt(sys.argv[1:], "a:i:p:Rr:ve:E:x?",
                                    ["all-entries=", "import=", "purge=", "recursive", "root=", "version", "help",
