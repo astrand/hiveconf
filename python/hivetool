@@ -1,13 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 # -*-Python-*-
-
+import os
 import sys
 import getopt
 import hiveconf
+import locale
 
 VERSION="0.0"
 DEFAULT_TYPE="string"
 DEFAULT_ROOT_HIVE="/etc/root.hconf"
+
+def safe_string(s):
+    """Makes a string safe to print on sys.stdout"""
+    enc = sys.stdout.encoding
+    if enc is None:
+        enc = locale.getpreferredencoding(False)
+    return s.encode(enc, errors="replace").decode(enc)
 
 def get_type(s):
     """Parse parameter string. Returns (type, parameter)"""
@@ -38,28 +46,39 @@ def get_value(s):
 def handle_param(hive, param):
     """Print parameter. Returns zero on success"""
     (paramtype, param) = get_type(param)
-    (parampath, value) = get_value(param)
+    (parampath, input_value) = get_value(param)
 
-    if not value:
+    current_value = None
+    new_param = False
+    method = getattr(hive, "get_%s" % paramtype)
+    try:
+        current_value = method(parampath)
+    except hiveconf.NotAParameterError:
+        display_error =  "%s: Not a parameter" % parampath
+        new_param = True
+
+    if current_value == None:
+        display_error = "%s: No such parameter" % parampath
+        new_param = True
+
+    if not input_value:
         # Display value
-        method = getattr(hive, "get_%s" % paramtype)
-        try:
-            value = method(parampath)
-        except hiveconf.NotAParameterError:
-            print >>sys.stderr, "%s: Not a parameter" % parampath
-            return 1
-            
-        if value == None:
-            print >>sys.stderr, "%s: No such parameter" % parampath
+        if new_param:
+            # Can't display the value of a parameter that doesn't exist
+            print(display_error, file=sys.stderr)
             return 1
         else:
-            print value
+            if isinstance(current_value, str):
+                current_value = safe_string(current_value)
+            print(current_value)
     else:
         # Set value
         method = getattr(hive, "set_%s" % paramtype)
-        if not method(parampath, value):
-            print >>sys.stderr, "Failed to set parameter", parampath
+        if not method(parampath, input_value):
+            print("Failed to set parameter", parampath, file=sys.stderr)
             return 1
+        if new_param:
+            print("Created new parameter: ", parampath)
     return 0
 
 
@@ -68,60 +87,91 @@ def eval_print(hive, varname, param, export):
     method = getattr(hive, "get_%s" % paramtype)
     value = method(parampath)
     if export:
-        print "export",
+        print("export", end=' ')
     if value:
         value = str(value)
         # ' is the only character that needs special handling
         value = value.replace("'", "'\\''")
-        print "%s='%s'" % (varname, value)
+        print("%s='%s'" % (varname, value))
     else:
-        print "%s=''" % varname
+        print("%s=''" % varname)
     if value == None:
         return 1
     else:
         return 0
 
+def _walk(hive, folderpath="/"):
+    params = hive.get_parameters(folderpath)
+    folders = hive.get_folders(folderpath)
 
-def imp_walk(hive, ih, folderpath):
-    # Handle parameters and values
-    for paramname in ih.get_parameters(folderpath):
-        parampath = folderpath + "/" + paramname
-        value = ih.get_string(parampath)
-        #print "setting", parampath, "to", value
-        hive.set_string(parampath, value)
-        if parampath in purge_params:
-            purge_params.remove(parampath)
+    yield (folderpath, params, folders)
 
-    for subname in ih.get_folders(folderpath):
+    for subname in folders:
         if subname == "/":
             continue
         if folderpath != "/":
             subname = "/" + subname
         subfolder = folderpath + subname
-        imp_walk(hive, ih, subfolder)
+        yield from _walk(hive, subfolder)
+
+def imp_walk(hive, ih):
+    for (folderpath, params, folders) in _walk(ih):
+        for paramname in params:
+            parampath = folderpath + "/" + paramname
+            value = ih.get_string(parampath)
+            #print "setting", parampath, "to", value
+            hive.set_string(parampath, value)
+            if parampath in purge_params:
+                purge_params.remove(parampath)
 
 # A list of parameters to delete
 purge_params = []
 
-def purge_walk(hive, ph, folderpath):
-    # Handle parameters and values
-    for paramname in ph.get_parameters(folderpath):
-        parampath = folderpath + "/" + paramname
-        if hive.lookup(parampath) != None:
-            # Add to delete-list
-            purge_params.append(parampath)
+def purge_walk(hive, ph):
+    for (folderpath, params, folders) in _walk(ph):
+        for paramname in params:
+            parampath = folderpath + "/" + paramname
+            if hive.lookup(parampath) != None:
+                # Add to delete-list
+                purge_params.append(parampath)
 
-    for subname in ph.get_folders(folderpath):
-        if subname == "/":
-            continue
-        if folderpath != "/":
-            subname = "/" + subname
-        subfolder = folderpath + subname
-        purge_walk(hive, ph, subfolder)
+
+def print_walk(hive, root, recursive=True):
+    folder = hive.lookup(root)
+    rootdepth = len(folder.sectionname.split("/"))
+
+    for (folderpath, params, folders) in _walk(hive, root):
+        folder = hive.lookup(folderpath)
+        section = folder.sectionname
+        depth = len(folder.sectionname.split("/"))
+        indent = (depth - rootdepth) * 4
+        if len(folder.sources) > 0:
+            source = folder.sources[0]
+        else:
+            source = None
+
+        # Print sub-folder name
+        if folderpath != root:
+            foldername = os.path.basename(folderpath)
+            foldername = safe_string(foldername)
+            sys.stdout.write(" " * (indent-4))
+            sys.stdout.write(foldername + "/\n")
+
+        # Print Parameters and values
+        for param in params:
+            parampath = folderpath + "/" + param
+            value = hive.get_string(parampath)
+            param = safe_string(param)
+            value = safe_string(value)
+            sys.stdout.write(" " * indent)
+            sys.stdout.write("%s = %s\n" % (param, value))
+
+        if not recursive:
+            break
 
 
 def usage():
-    print >>sys.stderr, """
+    print("""
 hivetool [options] [type:]parameter[=value] ...
 
   -a,--all-entries        Print all parameters and values in a folder
@@ -146,11 +196,17 @@ hivetool [options] [type:]parameter[=value] ...
   hivetool -r /etc/samba/smb.conf /global/workgroup=MYWORKGROUP
 
   hivetool -p /etc/samba/smb.conf -i /etc/samba/smb.conf.rpmsave
-"""
+""", file=sys.stderr)
 
 
 
 def main():
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+    except locale.Error as e:
+        print("\nWarning: Can't set the locale (%s); make sure $LC_* and $LANG are correct\n" %
+              e, file=sys.stderr)
+
     try:
         opts, args = getopt.getopt(sys.argv[1:], "a:i:p:Rr:ve:E:x?",
                                    ["all-entries=", "import=", "purge=", "recursive", "root=", "version", "help",
@@ -179,7 +235,7 @@ def main():
         if o in ("-r", "--root"):
             roothive = a
         if o in ("-v", "--version"):
-            print >> sys.stderr, "hivetool version", VERSION
+            print("hivetool version", VERSION, file=sys.stderr)
             sys.exit(0)
         if o in ("-e", "--eval"):
             words = a.split("=", 1)
@@ -204,12 +260,12 @@ def main():
     for purge_file in purge_files:
         ph = hiveconf.open_hive(purge_file)
         reduced_hive = hiveconf.open_hive(roothive, blacklist=[purge_file])
-        purge_walk(reduced_hive, ph, "/")
+        purge_walk(reduced_hive, ph)
 
     # Import specified files
     for imp_file in imp_files:
         ih = hiveconf.open_hive(imp_file)
-        imp_walk(hive, ih, "/")
+        imp_walk(hive, ih)
 
     # Actually purge. Note that if you specify all files where the
     # parameter is defined as purge files, then all instances of the
@@ -238,14 +294,14 @@ def main():
     for foldername in walk_folders:
         folder = hive.lookup(foldername)
         if not folder:
-            print >>sys.stderr, "%s: Folder not found" % foldername
+            print("%s: Folder not found" % foldername, file=sys.stderr)
             continue
 
         if not isinstance(folder, hiveconf.Folder):
-            print >>sys.stderr, "%s: not a folder" % foldername
+            print("%s: not a folder" % foldername, file=sys.stderr)
             continue
-        
-        folder.walk(recursive)
+
+        print_walk(hive, foldername, recursive)
 
     sys.exit(errors)
 
